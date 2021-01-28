@@ -1,0 +1,27 @@
+version: "3.3"
+
+services:
+  mysql:
+      image: mysql:5.7
+      container_name: exjobb.mysql
+      expose:
+        - "3306"
+      ports:
+        - "3306:3306"
+      environment:
+        MYSQL_DATABASE: searchrecords
+        MYSQL_USER: root
+        MYSQL_PASSWORD:
+        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  
+  api:
+      container_name: exjobb.api
+      build:
+        context: ./docker/flask
+        dockerfile: Dockerfile
+      ports:
+        - "5000:5000"
+      depends_on: 
+        - "mysql"
+  redis:
+      container_name: exjobb.redis
+      image: "redis:alpine"
