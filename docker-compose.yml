@@ -15,13 +15,12 @@ services:
         MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  
   api:
       container_name: exjobb.api
-      build:
-        context: ./docker/flask
-        dockerfile: Dockerfile
+      build: ./flask
       ports:
         - "5000:5000"
       depends_on: 
         - "mysql"
+      volumes: ['./flask:/app']
   redis:
       container_name: exjobb.redis
       image: "redis:alpine"
