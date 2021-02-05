@@ -1,7 +1,9 @@
 import time
 import redis
+import json
+import datetime
 from decouple import config
-from flask import Flask, request
+from flask import Flask, request, Response
 from flask_sqlalchemy import SQLAlchemy as sa
 from flask_sqlalchemy import Model
 from flask_cors import CORS, cross_origin
@@ -39,3 +41,41 @@ def count_query():
     query = data['query']
     res = db.session.query(SearchRecord).filter(SearchRecord.query.contains(query)).count()
     return 'Hello World! I have seen messages like "{}" {} times.\n'.format(query, res)
+
+@app.route('/count-interval', methods=['POST'])
+@cross_origin()
+def count_query_interval():
+    data = request.json
+    if 'query' not in data:
+        return Response("Missing parameter 'query'", status=400)
+    if 'interval_mins' not in data:
+        return Response("Missing parameter 'interval_mins'", status=400)
+    if 'days_ago' not in data:
+        return Response("Missing parameter 'days_ago'", status=400)
+    query = data['query']
+    interval_mins = data['interval_mins']
+    days_ago = data['days_ago']
+    res = db.session.execute("""
+        SELECT search_records.query, count(search_records.query) as count, 
+        UNIX_TIMESTAMP(created_at) DIV (60 * :mins) as timekey
+        FROM search_records
+        WHERE
+        search_records.query LIKE :query
+        AND
+        search_records.created_at >= now() - interval :days day
+        GROUP BY
+        timekey, search_records.query
+        ORDER BY
+        timekey DESC
+        """, {
+            'query': query,
+            'mins': interval_mins,
+            'days': days_ago 
+        })
+    res_arr = []
+    for r in res:
+        r = dict(r.items())
+        r['time'] = datetime.datetime.utcfromtimestamp(r['timekey']*60*interval_mins).strftime('%Y-%m-%d %H:%M:%S')
+        res_arr.append(r)
+    return Response(json.dumps(res_arr), status=200, content_type="application/json")
+    
