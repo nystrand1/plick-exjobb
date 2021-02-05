@@ -56,7 +56,7 @@ def count_query_interval():
     interval_mins = data['interval_mins']
     days_ago = data['days_ago']
     res = db.session.execute("""
-        SELECT search_records.query, count(search_records.query) as count, 
+        SELECT :query, count(search_records.query) as count, 
         UNIX_TIMESTAMP(created_at) DIV (60 * :mins) as timekey
         FROM search_records
         WHERE
