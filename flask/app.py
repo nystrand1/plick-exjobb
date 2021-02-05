@@ -64,7 +64,7 @@ def count_query_interval():
         AND
         search_records.created_at >= now() - interval :days day
         GROUP BY
-        timekey, search_records.query
+        timekey, :query
         ORDER BY
         timekey DESC
         """, {
