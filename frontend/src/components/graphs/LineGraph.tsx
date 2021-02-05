@@ -31,17 +31,17 @@ import {
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis
           dataKey={"time"}
-          name={xLabel}
           style={{ fontSize: 14 }}
         />
         <YAxis name={yLabel} />
+        <ZAxis dataKey={"query"} name={zLabel} />
         <Line
+          type="monotone"
           name={title}
           dataKey={"count"}
           style={{ fontSize: 14 }}
         />
-        <ZAxis dataKey={"query"} name={zLabel} />
-        <Tooltip/>
+        <Tooltip labelStyle={{color: "black"}}/>
         <Legend />
       </LineChart>
     );
