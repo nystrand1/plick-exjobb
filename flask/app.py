@@ -77,5 +77,6 @@ def count_query_interval():
         r = dict(r.items())
         r['time'] = datetime.datetime.utcfromtimestamp(r['timekey']*60*interval_mins).strftime('%Y-%m-%d %H:%M:%S')
         res_arr.append(r)
+    res_arr.reverse()
     return Response(json.dumps(res_arr), status=200, content_type="application/json")
     
