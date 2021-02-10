@@ -3,8 +3,7 @@ redis
 sqlalchemy
 flask_sqlalchemy
 python-decouple
-mysql-connector-python
-pymysql
 flask-cors
-numpy
-scikit-learn
+#numpy
+# scikit-learn
+psycopg2
