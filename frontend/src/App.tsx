@@ -18,15 +18,14 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("Loading...");
   const [data, setData] = useState([]);
-  const [query, setQuery] = useState("vinter%");
+  const [query, setQuery] = useState("nike");
   useEffect(() => {
     Api.post("count-interval", {
       query: query,
-      interval_mins: 60*24,
-      days_ago: 90,
+      interval_mins: 60,
+      days_ago: 7,
     }).then((res) => {
       console.log(res);
-      console.log(res[0]);
       setData(res);
       setLoading(false);
     });

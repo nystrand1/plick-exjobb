@@ -15,12 +15,14 @@ import {
     xLabel : string,
     yLabel : string,
     zLabel? : string,
-    data : any
+    data : any,
+    futureData? : any,
   }
 
   const LineGraph = (props : LineGraphProps) => {
 
-    const {data, xLabel, yLabel, zLabel, title} = props;
+    const {data, xLabel, yLabel, zLabel, title, futureData} = props;
+
     return (
     <LineChart
         width={1400}
@@ -30,7 +32,7 @@ import {
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis
-          dataKey={"time"}
+          dataKey={"interval"}
           style={{ fontSize: 14 }}
         />
         <YAxis name={yLabel} />
