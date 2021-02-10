@@ -1,25 +1,24 @@
 version: "3.3"
 
 services:
-  mysql:
-      image: mysql:5.7
-      container_name: exjobb.mysql
+  postgres:
+      image: postgres
+      container_name: exjobb.postgres
       expose:
-        - "3306"
+        - "5432"
       ports:
-        - "3306:3306"
+        - "5432:5432"
       environment:
-        MYSQL_DATABASE: searchrecords
-        MYSQL_USER: root
-        MYSQL_PASSWORD:
-        MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  
+        - POSTGRES_DB=postgres
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
   api:
       container_name: exjobb.api
       build: ./flask
       ports:
         - "5000:5000"
       depends_on: 
-        - "mysql"
+        - "postgres"
       volumes: ['./flask:/app']
   redis:
       container_name: exjobb.redis
