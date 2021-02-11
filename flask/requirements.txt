@@ -4,6 +4,7 @@ sqlalchemy
 flask_sqlalchemy
 python-decouple
 flask-cors
-#numpy
-# scikit-learn
-psycopg2
+numpy
+pandas
+#scikit-learn
+psycopg2-binary
