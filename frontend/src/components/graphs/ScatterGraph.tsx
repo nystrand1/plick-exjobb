@@ -29,7 +29,7 @@ import {
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis
-          dataKey={"time"}
+          dataKey={"time_interval"}
           name={xLabel}
           style={{ fontSize: 14 }}
           type={"category"}

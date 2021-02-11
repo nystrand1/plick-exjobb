@@ -9,6 +9,7 @@ import {
     Tooltip,
     Legend,
   } from "recharts";
+  import CustomTooltip from "../misc/CustomToolTip/CustomToolTip";
 
   export interface LineGraphProps {
     title : string,
@@ -32,18 +33,18 @@ import {
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis
-          dataKey={"interval"}
+          dataKey={"time_interval"}
           style={{ fontSize: 14 }}
         />
         <YAxis name={yLabel} />
-        <ZAxis dataKey={"query"} name={zLabel} />
+        <ZAxis dataKey={"query"}/>
         <Line
           type="monotone"
           name={title}
           dataKey={"count"}
           style={{ fontSize: 14 }}
         />
-        <Tooltip labelStyle={{color: "black"}}/>
+        <Tooltip labelStyle={{color: "black"}} content={<CustomTooltip fallBackName={title} />}/>
         <Legend />
       </LineChart>
     );
