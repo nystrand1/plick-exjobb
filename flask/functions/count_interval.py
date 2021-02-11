@@ -1,30 +1,63 @@
-def count_interval(db, query = "nike", interval_mins = 60, days_ago=7):
+def count_interval_grouped(db, query="nike", interval_mins=60, start_date="2020-12-30", end_date="2020-12-31"):
     res = db.session.execute("""
-        SELECT query, to_char(series.minute, 'YYYY-MM-DD HH24:MI:SS') as interval, coalesce(count.amount,0) as count from 
-        (
-        SELECT :query as query, count(query) amount,
+        SELECT query, to_char(series.time_interval, 'YYYY-MM-DD HH24:MI:SS') as time_interval, coalesce(count.amount,0) as count from 
+        (SELECT :query as query, count(query) amount,
         TIMESTAMP WITH TIME ZONE 'epoch' +
-        INTERVAL '1 second' * round(extract('epoch' from created_at) / (:mins * 60)) * (:mins * 60) as interval
+        INTERVAL '1 second' * floor(extract('epoch' from created_at) / (:mins *60)) * (:mins *60) as time_interval
         FROM search_records.search_record  
         WHERE query LIKE :query
         AND
-        created_at >= '2021-02-02'::date - :days
-        GROUP BY round(extract('epoch' from created_at) / (:mins * 60))
-        ) count
-
-        RIGHT JOIN 
+        created_at BETWEEN  (:start_date)::date AND (:end_date)::date
+        GROUP BY floor(extract('epoch' from created_at) / (:mins *60))
+		) count
+		RIGHT JOIN 
         (
-        SELECT generate_series(max(date_trunc('minute',created_at::date - :days)),
-        max(date_trunc('minute', '2021-02-02'::date)),':mins m') as minute from search_records.search_record
+        SELECT generate_series(date_trunc('minute',(:start_date)::date),
+        date_trunc('minute', (:end_date)::date ),':mins min'::interval) as time_interval
         ) series
-        on series.minute = count.interval
+        on series.time_interval = count.time_interval
         ORDER BY
-        interval DESC
+        time_interval DESC
         """, {
-            'query': query,
-            'mins': interval_mins,
-            'days': days_ago ,
-        })
+        'query': query,
+        'mins': interval_mins,
+        'start_date': start_date,
+        'end_date': end_date
+    })
+    res_arr = []
+    for r in res:
+        r = dict(r.items())
+        res_arr.append(r)
+    res_arr.reverse()
+    return res_arr
+
+
+def count_interval_individual(db, query="nike", interval_mins=60, start_date="2020-12-30", end_date="2020-12-31"):
+    res = db.session.execute("""
+        SELECT query, to_char(series.time_interval, 'YYYY-MM-DD HH24:MI:SS') as time_interval, coalesce(count.amount,0) as count from 
+        (SELECT query, count(query) amount,
+        TIMESTAMP WITH TIME ZONE 'epoch' +
+        INTERVAL '1 second' * floor(extract('epoch' from created_at) / (:mins *60)) * (:mins *60) as time_interval
+        FROM search_records.search_record  
+        WHERE query LIKE :query
+        AND
+        created_at BETWEEN  (:start_date)::date AND (:end_date)::date
+        GROUP BY floor(extract('epoch' from created_at) / (:mins *60)), query
+		) count
+		RIGHT JOIN 
+        (
+        SELECT generate_series(date_trunc('minute',(:start_date)::date),
+        date_trunc('minute', (:end_date)::date ),':mins min'::interval) as time_interval
+        ) series
+        on series.time_interval = count.time_interval
+        ORDER BY
+        time_interval DESC
+        """, {
+        'query': query,
+        'mins': interval_mins,
+        'start_date': start_date,
+        'end_date': end_date
+    })
     res_arr = []
     for r in res:
         r = dict(r.items())
