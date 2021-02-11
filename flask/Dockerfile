@@ -1,12 +1,15 @@
-FROM python:3.7-alpine
-RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev
+FROM ubuntu:21.04
+ARG DEBIAN_FRONTEND=noninteractive 
+RUN apt-get update \
+    && apt-get -y upgrade \
+    && apt-get install -y python3 \
+    && apt-get install -y python3-pip 
 WORKDIR /app
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_ENV=development
-RUN apk add --no-cache gcc musl-dev linux-headers
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 EXPOSE 5000
 COPY * /app/
 CMD ["flask", "run"]
