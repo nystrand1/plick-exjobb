@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom'
 import '~styles/global.scss'
 import { App } from '~components'
 
-ReactDOM.render(
+const Root = (
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
-  document.getElementById('root'),
+  </React.StrictMode>
 )
+
+ReactDOM.render(Root, document.getElementById('root'))
