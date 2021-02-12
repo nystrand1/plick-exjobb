@@ -8,7 +8,7 @@ export const App = () => {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState([])
   const [query, setQuery] = useState('nike')
-  const [startDate, setStartDate] = useState(new Date('2020-12-30'))
+  const [startDate, setStartDate] = useState(new Date('2020-12-01'))
   const [endDate, setEndDate] = useState(new Date('2020-12-31'))
 
   useEffect(() => {
