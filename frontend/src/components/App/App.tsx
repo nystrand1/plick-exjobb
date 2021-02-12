@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react'
-import DateTimePicker from 'react-datetime-picker'
 import s from './App.module.scss'
 import { LineGraph } from '~components'
 import { Api } from '~services'
+import { ToolSet } from '~components/ToolSet'
 
 export const App = () => {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState([])
   const [query, setQuery] = useState('nike')
-  const [startDate, setStartDate] = useState(new Date('2020-12-01'))
+  const [startDate, setStartDate] = useState(new Date('2020-12-30'))
   const [endDate, setEndDate] = useState(new Date('2020-12-31'))
 
   useEffect(() => {
     Api.linearRegression({
       query: query,
-      interval_mins: 60 * 24,
+      interval_mins: 60,
       start_date: startDate,
       end_date: endDate,
     }).then((res) => {
@@ -39,9 +39,14 @@ export const App = () => {
                 zLabel={'Query'}
                 title={query}
               />
-              <DateTimePicker onChange={setStartDate} value={startDate} />
-              <DateTimePicker onChange={setEndDate} value={endDate} />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} />
+              <ToolSet
+                query={query}
+                startDate={startDate}
+                endDate={endDate}
+                setQuery={setQuery}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}
+              />
             </>
           )}
         </div>
