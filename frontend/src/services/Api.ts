@@ -8,7 +8,7 @@ export interface CountRequestData {
   start_date?: Date,
   end_date?: Date,
 }
-export default class Api {
+export class Api {
 
   static async countIntervalGrouped(data: CountRequestData) {
     return this.post("count-interval-grouped", data);
