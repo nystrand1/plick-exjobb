@@ -34,7 +34,22 @@ export const LineGraph = (props: LineGraphProps) => {
       <XAxis dataKey={'time_interval'} style={{ fontSize: 14 }} />
       <YAxis name={yLabel} />
       <ZAxis dataKey={'query'} />
-      <Line type="monotone" name={title} dataKey={'count'} style={{ fontSize: 14 }} />
+      <Line
+        type="monotone"
+        name={title}
+        dataKey={'count'}
+        style={{ fontSize: 14 }}
+        fill="red"
+        stroke="red"
+      />
+      <Line
+        type="monotone"
+        name={'trend'}
+        dataKey={'trend'}
+        style={{ fontSize: 14 }}
+        fill="green"
+        stroke="green"
+      />
       <Tooltip
         labelStyle={{ color: 'black' }}
         content={<CustomTooltip fallBackName={title} />}

@@ -18,6 +18,10 @@ export class Api {
     return this.post("count-interval-individual", data);
   }
 
+  static async linearRegression(data: CountRequestData) {
+    return this.post("linear-regression", data);
+  }
+
   static async get(endpoint : string, data = {}) {
     const response = await axios.get(endpoint, data);
     return response.data;

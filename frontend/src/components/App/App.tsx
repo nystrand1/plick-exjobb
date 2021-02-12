@@ -7,12 +7,12 @@ import { Api } from '~services'
 export const App = () => {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState([])
-  const [query, setQuery] = useState('sommar%')
-  const [startDate, setStartDate] = useState(new Date('2021-01-01'))
-  const [endDate, setEndDate] = useState(new Date('2021-02-04'))
+  const [query, setQuery] = useState('nike')
+  const [startDate, setStartDate] = useState(new Date('2020-12-30'))
+  const [endDate, setEndDate] = useState(new Date('2020-12-31'))
 
   useEffect(() => {
-    Api.countIntervalIndividual({
+    Api.linearRegression({
       query: query,
       interval_mins: 60 * 24,
       start_date: startDate,

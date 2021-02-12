@@ -11,6 +11,8 @@ from flask_cors import CORS, cross_origin
 from .models.search_record import SearchRecord
 from .functions.count_interval import count_interval_grouped, count_interval_individual
 from .functions.regression.linear import get_linear_model
+from .functions.utils.generator import generate_series_from_model
+from .functions.utils.merge import merge_datasets
 
 
 app = Flask(__name__)
@@ -88,9 +90,20 @@ def count_query_interval_individual():
 @app.route('/linear-regression', methods=['POST'])
 @cross_origin()
 def linear_regression():
-    res = count_interval_grouped(db)
-    linear_model = get_linear_model(res)
+    data = request.json
+    if 'query' not in data:
+        return Response("Missing parameter 'query'", status=400)
+    if 'interval_mins' not in data:
+        return Response("Missing parameter 'interval_mins'", status=400)
 
-    return Response(json.dumps({
-        'model': linear_model
-    }), status=200, content_type="text/plain")
+    query = data['query']
+    interval_mins = data['interval_mins']
+    start_date = data['start_date']
+    end_date = data['end_date']
+    count_interval = count_interval_grouped(
+        db, query, interval_mins, start_date, end_date)
+    linear_model = get_linear_model(count_interval)
+    time_series = generate_series_from_model(len(count_interval), linear_model)
+    res = merge_datasets(count_interval, time_series)
+
+    return Response(json.dumps(res), status=200, content_type="application/json")
