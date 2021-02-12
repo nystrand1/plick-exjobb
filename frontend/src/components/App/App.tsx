@@ -12,7 +12,7 @@ export const App = () => {
   const [endDate, setEndDate] = useState(new Date('2021-02-04'))
 
   useEffect(() => {
-    Api.countIntervalGrouped({
+    Api.countIntervalIndividual({
       query: query,
       interval_mins: 60 * 24,
       start_date: startDate,
