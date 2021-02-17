@@ -3,15 +3,15 @@ const axios = require("axios").default;
 axios.defaults.baseURL = "http://localhost:5000";
 
 export class Api {
-  static async countIntervalGrouped(data: CountRequestData) {
+  static async countIntervalGrouped(data: ICountRequestData) {
     return this.post("count-interval-grouped", data);
   }
 
-  static async countIntervalIndividual(data: CountRequestData) {
+  static async countIntervalIndividual(data: ICountRequestData) {
     return this.post("count-interval-individual", data);
   }
 
-  static async linearRegression(data: CountRequestData) {
+  static async linearRegression(data: ICountRequestData) {
     return this.post("linear-regression", data);
   }
 

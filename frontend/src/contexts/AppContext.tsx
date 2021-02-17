@@ -21,8 +21,8 @@ const useProviderValue = () => {
   )
   return value
 }
-export type IContext = ReturnType<typeof useProviderValue>
 
+type IContext = ReturnType<typeof useProviderValue>
 const Context = React.createContext<IContext | undefined>(undefined)
 
 export const Provider: React.FC = (props) => {

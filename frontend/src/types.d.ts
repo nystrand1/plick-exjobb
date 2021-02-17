@@ -1,11 +1,11 @@
-interface Data {
+interface IData {
   count: number
   query: string
   timeInterval: string
   trend: number
 }
 
-interface CountRequestData {
+interface ICountRequestData {
   query?: string,
   interval_mins?: number,
   start_date?: Date,
