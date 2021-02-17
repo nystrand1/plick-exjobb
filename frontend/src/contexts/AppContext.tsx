@@ -1,7 +1,7 @@
 import * as React from 'react'
 
 const useProviderValue = () => {
-  const [data, setData] = React.useState<Data[]>([])
+  const [data, setData] = React.useState<IData[]>([])
   const [query, setQuery] = React.useState('nike')
   const [startDate, setStartDate] = React.useState(new Date('2020-12-30'))
   const [endDate, setEndDate] = React.useState(new Date('2020-12-31'))
