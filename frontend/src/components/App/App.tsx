@@ -4,6 +4,7 @@ import { LineGraph } from '~components'
 import { Api } from '~services'
 import { ToolSet } from '~components/ToolSet'
 import { useContext } from '~contexts'
+import { DateTimePicker } from 'react-date'
 
 export const App = () => {
   const [loading, setLoading] = React.useState(true)
@@ -12,7 +13,7 @@ export const App = () => {
   React.useEffect(() => {
     Api.linearRegression({
       query: query,
-      interval_mins: 60,
+      interval_mins: 60*24,
       start_date: startDate,
       end_date: endDate,
     }).then((res) => {
