@@ -26,7 +26,7 @@ export const LineGraph = (props: LineGraphProps) => {
   const colors = ["yellow", "blue", "green", "pink", "purple"]
 
   const getTrendlines = () => {
-    return Object.keys(data[0]).filter(key => key.startsWith("degree")); 
+    return Object.keys(data[0].trends).filter(key => key.startsWith("degree")); 
   }
 
   return (
@@ -50,9 +50,10 @@ export const LineGraph = (props: LineGraphProps) => {
       />
       {getTrendlines().map((key, i) => {
         return <Line
+        key={key}
         type="monotone"
         name={key}
-        dataKey={key}
+        dataKey={`trends.${key}`}
         style={{ fontSize: 14 }}
         fill={colors[i % colors.length]}
         stroke={colors[i % colors.length]}
