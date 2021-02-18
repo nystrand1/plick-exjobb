@@ -2,7 +2,7 @@ interface IData {
   count: number
   query: string
   timeInterval: string
-  trend: number
+  trends: {[key: string]: number}
 }
 
 interface ICountRequestData {
