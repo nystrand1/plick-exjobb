@@ -102,8 +102,12 @@ def linear_regression():
     end_date = data['end_date']
     count_interval = count_interval_grouped(
         db, query, interval_mins, start_date, end_date)
-    linear_model = get_linear_model(count_interval)
-    time_series = generate_series_from_model(len(count_interval), linear_model)
-    res = merge_datasets(count_interval, time_series)
+    for n in range(1, 4):
+        linear_model = get_linear_model(count_interval, n)
+        time_series = generate_series_from_model(len(count_interval), linear_model)
+        
+        count_interval = merge_datasets(count_interval, time_series, key_name="degree {}".format(n))
 
-    return Response(json.dumps(res), status=200, content_type="application/json")
+
+
+    return Response(json.dumps(count_interval), status=200, content_type="application/json")
