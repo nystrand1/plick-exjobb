@@ -4,7 +4,6 @@ import { LineGraph } from '~components'
 import { Api } from '~services'
 import { ToolSet } from '~components/ToolSet'
 import { useContext } from '~contexts'
-import { DateTimePicker } from 'react-date'
 
 export const App = () => {
   const [loading, setLoading] = React.useState(true)
