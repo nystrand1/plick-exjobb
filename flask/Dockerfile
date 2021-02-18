@@ -1,5 +1,6 @@
 FROM ubuntu:21.04
 ARG DEBIAN_FRONTEND=noninteractive 
+ENV PYTHONUNBUFFERED=1
 RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get install -y python3 \

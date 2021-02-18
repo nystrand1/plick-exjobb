@@ -4,8 +4,9 @@ import json
 import logging
 import time
 from datetime import datetime
+from sklearn.metrics import r2_score
 
-def get_linear_model(dataset):
+def get_linear_model(dataset, degree=1):
     logger = logging.getLogger(__name__)
     data = dict()
     count_list = list()
@@ -17,8 +18,8 @@ def get_linear_model(dataset):
     formatted_data = pd.DataFrame(data=data)
     x = formatted_data.time_slices
     y = formatted_data.amount
-    logger.debug(formatted_data)
-    model = np.polyfit(x, y, 1)
-    logger.debug(model)
+    model = np.polyfit(x, y, degree)
     return model.tolist()
 
+def get_model_score(combined_dataset):
+    pass

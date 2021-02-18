@@ -2,6 +2,8 @@ import time
 import redis
 import json
 import datetime
+import logging
+import sys
 from decouple import config
 from flask import Flask, request, Response
 from flask_sqlalchemy import SQLAlchemy as sa
@@ -20,6 +22,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = config('SQLALCHEMY_DATABASE_URI')
 cache = redis.Redis(host='redis', port=6379)
 db = sa(app)
 CORS(app, resources={r"/*": {"origins": "*"}})
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 def get_hit_count():
@@ -100,14 +103,17 @@ def linear_regression():
     interval_mins = data['interval_mins']
     start_date = data['start_date']
     end_date = data['end_date']
-    count_interval = count_interval_grouped(
+    if start_date == end_date:
+        logging.debug("SAME DATE")
+        logging.debug(end_date)
+    
+    dataset = count_interval_grouped(
         db, query, interval_mins, start_date, end_date)
-    for n in range(1, 4):
-        linear_model = get_linear_model(count_interval, n)
-        time_series = generate_series_from_model(len(count_interval), linear_model)
-        
-        count_interval = merge_datasets(count_interval, time_series, key_name="degree {}".format(n))
 
-
-
-    return Response(json.dumps(count_interval), status=200, content_type="application/json")
+    if len(dataset) > 1:
+        for n in range(9, 10):
+            linear_model = get_linear_model(dataset, n)
+            time_series = generate_series_from_model(len(dataset), linear_model)
+            dataset = merge_datasets(dataset, time_series, key_name="degree {}".format(n))
+    logging.debug(dataset)
+    return Response(json.dumps(dataset), status=200, content_type="application/json")

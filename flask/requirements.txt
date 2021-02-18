@@ -6,5 +6,5 @@ python-decouple
 flask-cors
 numpy
 pandas
-#scikit-learn
+scikit-learn
 psycopg2-binary
