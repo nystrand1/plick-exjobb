@@ -10,4 +10,5 @@ interface ICountRequestData {
   interval_mins?: number,
   start_date?: Date,
   end_date?: Date,
+  degrees?: number,
 }
