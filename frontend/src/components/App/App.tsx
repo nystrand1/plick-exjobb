@@ -1,26 +1,11 @@
 import * as React from 'react'
 import s from './App.module.scss'
 import { LineGraph } from '~components'
-import { Api } from '~services'
 import { ToolSet } from '~components/ToolSet'
 import { useContext } from '~contexts'
 
 export const App = () => {
-  const [loading, setLoading] = React.useState(true)
-  const { data, query, startDate, endDate, setData } = useContext()
-
-  React.useEffect(() => {
-    Api.linearRegression({
-      query: query,
-      interval_mins: 60*24,
-      start_date: startDate,
-      end_date: endDate,
-    }).then((res) => {
-      console.log(res)
-      setData(res)
-      setLoading(false)
-    })
-  }, [startDate, endDate, query, setData])
+  const { query, loading, data } = useContext()
 
   return (
     <div className={s.appWrapper}>
@@ -37,9 +22,9 @@ export const App = () => {
                 zLabel={'Query'}
                 title={query}
               />
-              <ToolSet />
             </>
           )}
+          <ToolSet />
         </div>
       </header>
     </div>

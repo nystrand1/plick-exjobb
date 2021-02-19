@@ -21,5 +21,8 @@ def get_linear_model(dataset, degree=1):
     model = np.polyfit(x, y, degree)
     return model.tolist()
 
-def get_model_score(combined_dataset):
-    pass
+def get_model_score(combined_dataset, trend_key):
+    y = [d['count'] for d in combined_dataset]
+    y_pred = [d['trends'][trend_key] for d in combined_dataset]
+    score = r2_score(y, y_pred)
+    return score

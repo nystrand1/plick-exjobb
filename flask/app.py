@@ -13,6 +13,7 @@ from flask_cors import CORS, cross_origin
 from .models.search_record import SearchRecord
 from .functions.count_interval import count_interval_grouped, count_interval_individual
 from .functions.regression.linear import get_linear_model
+from .functions.regression.linear import get_model_score
 from .functions.utils.generator import generate_series_from_model
 from .functions.utils.merge import merge_datasets
 
@@ -110,10 +111,19 @@ def linear_regression():
     dataset = count_interval_grouped(
         db, query, interval_mins, start_date, end_date)
 
+    model_scores = dict()
     if len(dataset) > 1:
-        for n in range(9, 10):
+        for n in range(20, 22):
+            key_name = "degree {}".format(n)
             linear_model = get_linear_model(dataset, n)
-            time_series = generate_series_from_model(len(dataset), linear_model)
-            dataset = merge_datasets(dataset, time_series, key_name="degree {}".format(n))
+            trend_dataset = generate_series_from_model(len(dataset), linear_model)
+            dataset = merge_datasets(dataset, trend_dataset, key_name=key_name)
+            model_score = get_model_score(dataset, trend_key=key_name)
+            model_scores[key_name] = model_score
+            logging.debug(model_score)
     logging.debug(dataset)
-    return Response(json.dumps(dataset), status=200, content_type="application/json")
+    res = {
+        'dataset': dataset,
+        'model_scores': model_scores
+    }
+    return Response(json.dumps(res), status=200, content_type="application/json")

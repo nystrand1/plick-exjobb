@@ -5,6 +5,7 @@ const useProviderValue = () => {
   const [query, setQuery] = React.useState('nike')
   const [startDate, setStartDate] = React.useState(new Date('2021-01-22'))
   const [endDate, setEndDate] = React.useState(new Date('2021-01-23'))
+  const [loading, setLoading] = React.useState(true)
 
   const value = React.useMemo(
     () => ({
@@ -12,12 +13,14 @@ const useProviderValue = () => {
       query,
       startDate,
       endDate,
+      loading,
+      setLoading,
       setData,
       setQuery,
       setStartDate,
       setEndDate,
     }),
-    [data, query, startDate, endDate, setData, setQuery, setStartDate, setEndDate],
+    [data, query, startDate, endDate, loading, setData, setQuery, setStartDate, setEndDate, setLoading],
   )
   return value
 }

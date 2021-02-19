@@ -3,6 +3,7 @@ const axios = require("axios").default;
 axios.defaults.baseURL = "http://localhost:5000";
 
 export class Api {
+
   static async countIntervalGrouped(data: ICountRequestData) {
     return this.post("count-interval-grouped", data);
   }
