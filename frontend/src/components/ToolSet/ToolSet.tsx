@@ -18,7 +18,8 @@ export const ToolSet = () => {
     setEndDate,
   } = useContext()
 
-  React.useEffect(() => {
+  const fetchData = React.useCallback(() => {
+    setLoading(true)
     Api.linearRegression({
       query: query,
       interval_mins: 60 * 24,
@@ -29,7 +30,13 @@ export const ToolSet = () => {
       setData(res['dataset'])
       setLoading(false)
     })
-  }, [startDate, endDate, query, setData])
+  }, [startDate, endDate, query, setData, setLoading])
+
+  React.useEffect(() => {
+    if (!data.length) {
+      fetchData()
+    }
+  }, [data, fetchData])
 
   return (
     <>
@@ -47,7 +54,11 @@ export const ToolSet = () => {
             }}
             selected={endDate}
           />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value.toLocaleLowerCase())}
+          />
+          <button onClick={() => fetchData()}>Fetch</button>
         </div>
       )}
     </>
