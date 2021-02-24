@@ -7,7 +7,11 @@ export const CustomTooltip = (props: any) => {
     return (
       <div className={s.customTooltip}>
         <p className="label">{label}</p>
-        <p className="intro">Count: {payload ? payload[0].value : '0'}</p>
+        {payload?.map((graph => {
+          return <>
+            <p key={graph.dataKey} className="intro">{graph.name}: {graph.value}</p>
+          </>
+        }))}
         <p className="desc">{data?.query ?? fallBackName}</p>
       </div>
     )
