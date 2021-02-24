@@ -5,18 +5,13 @@ import logging
 import time
 from datetime import datetime
 from sklearn.metrics import r2_score
-from flask import Response, request
-from http import HTTPStatus
+from flask import request
 
 from ..count_interval import *
-from ..utils.sanitizer import *
 from ..utils.generator import *
 from ..utils.merge import *
 
 def handle_linear_regression(db):
-    inputs = LinearRegressionInputs(request)
-    if not inputs.validate():
-        return Response(json.dumps(inputs.errors), status=HTTPStatus.BAD_REQUEST, content_type="application/json")
     data = request.json
     dataset = count_interval_unique(
         db=db, **data)
@@ -36,7 +31,7 @@ def handle_linear_regression(db):
         'dataset': dataset,
         'model_scores': model_scores
     }
-    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+    return res
 
 def get_linear_model(dataset, degree=1):
     logger = logging.getLogger(__name__)
