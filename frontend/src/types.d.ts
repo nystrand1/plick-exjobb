@@ -7,7 +7,7 @@ interface IData {
 
 interface ICountRequestData {
   query?: string,
-  interval_mins?: number,
+  trunc_by?: string,
   start_date?: Date,
   end_date?: Date,
   degrees?: number,
