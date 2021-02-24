@@ -22,7 +22,6 @@ export const ToolSet = () => {
     setLoading(true)
     Api.linearRegression({
       query: query,
-      interval_mins: 60 * 24,
       start_date: startDate,
       end_date: endDate,
     }).then((res) => {
