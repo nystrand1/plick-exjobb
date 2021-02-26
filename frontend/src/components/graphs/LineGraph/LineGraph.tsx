@@ -27,7 +27,13 @@ export const LineGraph = (props: LineGraphProps) => {
 
   const getTrendlines = () => {
     if (data[0].trends == null) return;
-    return Object.keys(data[0]?.trends).map(key => key); 
+    let keys: string[] = [];
+    data.map(elem => {
+      if (elem.trends != null) {
+        keys.push(...Object.keys(elem.trends).filter(key => !keys.includes(key)));
+      }
+    })
+    return keys;
   }
 
   return (

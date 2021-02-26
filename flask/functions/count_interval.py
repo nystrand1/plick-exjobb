@@ -87,9 +87,9 @@ Example user 1337 searches for 'nike' 5 times in 10 minute. This
 will be counted as 1 occurence in order to minimize the impact 
 of the trend.
 """
-def count_interval_unique(db, query="nike", trunc_by="day", start_date="2021-01-07", end_date="2021-01-31"):
+def count_interval_unique(db, query="nike", trunc_by="hour", start_date="2021-01-25", end_date="2021-01-31"):
     res = db.session.execute("""
-        SELECT :query as query, to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD') as time_interval, sum(coalesce(count.amount,0)) as count from 
+        SELECT :query as query, to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval, sum(coalesce(count.amount,0)) as count from 
         (SELECT :query as query, count(distinct coalesce(user_id, 0)) as amount,
         TIMESTAMP WITH TIME ZONE 'epoch' +
         INTERVAL '1 second' * floor(extract('epoch' from created_at) / (60*15)) * (60*15) as time_interval

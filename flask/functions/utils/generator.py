@@ -10,7 +10,9 @@ def generate_linear_series_from_model(time_series_len, model):
 
     return res
 
-def generate_arma_series_from_model(time_series_len, model):
+def generate_arma_series_from_model(time_series_len, list):
+    train_size = int(time_series_len*0.6)
     res = list()
-    prediction = model.predict(1, time_series_len, )
-    return [round(val) for val in prediction.values]
+    prediction = model.predict(train_size, time_series_len)
+    logging.debug(prediction)
+    return [round(val) for val in prediction]
