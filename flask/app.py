@@ -14,6 +14,7 @@ from http import HTTPStatus
 from .models.search_record import SearchRecord
 from .functions.utils.sanitizer import *
 from .functions.regression.linear import handle_linear_regression
+from .functions.regression.arma import handle_arma_regression
 
 
 app = Flask(__name__)
@@ -32,3 +33,7 @@ def linear_regression():
     res = handle_linear_regression(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+@app.route('/arma-regression', methods=['POST'])
+@cross_origin()
+def arma_regression():
+    return handle_arma_regression(db)

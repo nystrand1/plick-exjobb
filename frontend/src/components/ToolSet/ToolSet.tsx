@@ -20,7 +20,7 @@ export const ToolSet = () => {
 
   const fetchData = React.useCallback(() => {
     setLoading(true)
-    Api.linearRegression({
+    Api.armaRegression({
       query: query,
       start_date: startDate,
       end_date: endDate,

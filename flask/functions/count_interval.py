@@ -5,7 +5,7 @@ import logging
 Count grouped occurrences, for example when query is 'nike%' it will count
 'nike air' and 'nike shorts' as same data points
 """
-def count_interval_grouped(db, query="nike", interval_mins=60, start_date="2020-12-30", end_date="2020-12-31"):
+def count_interval_grouped(db, query="nike", interval_mins=60, start_date="2021-01-14", end_date="2021-01-15"):
     res = db.session.execute("""
         SELECT query, to_char(series.time_interval, :date_format) as time_interval, coalesce(count.amount,0) as count from 
         (SELECT :query as query, count(query) amount,
@@ -87,7 +87,7 @@ Example user 1337 searches for 'nike' 5 times in 10 minute. This
 will be counted as 1 occurence in order to minimize the impact 
 of the trend.
 """
-def count_interval_unique(db, query="nike", trunc_by="day", start_date="2020-12-30", end_date="2020-12-31"):
+def count_interval_unique(db, query="nike", trunc_by="day", start_date="2021-01-07", end_date="2021-01-15"):
     res = db.session.execute("""
         SELECT :query as query, to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD') as time_interval, sum(coalesce(count.amount,0)) as count from 
         (SELECT :query as query, count(distinct coalesce(user_id, 0)) as amount,

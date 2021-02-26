@@ -16,6 +16,10 @@ export class Api {
     return this.post("linear-regression", data);
   }
 
+  static async armaRegression(data: ICountRequestData) {
+    return this.post("arma-regression", data);
+  }
+
   static async get(endpoint : string, data = {}) {
     const response = await axios.get(endpoint, data);
     return response.data;

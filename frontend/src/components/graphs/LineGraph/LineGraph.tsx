@@ -27,7 +27,7 @@ export const LineGraph = (props: LineGraphProps) => {
 
   const getTrendlines = () => {
     if (data[0].trends == null) return;
-    return Object.keys(data[0]?.trends).filter(key => key?.startsWith("degree")); 
+    return Object.keys(data[0]?.trends).map(key => key); 
   }
 
   return (
