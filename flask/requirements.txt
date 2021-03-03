@@ -10,3 +10,5 @@ scikit-learn
 psycopg2-binary
 flask-inputs
 jsonschema
+statsmodels
+joblib

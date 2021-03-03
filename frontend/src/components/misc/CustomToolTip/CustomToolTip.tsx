@@ -9,7 +9,7 @@ export const CustomTooltip = (props: any) => {
         <p className="label">{label}</p>
         {payload?.map((graph => {
           return <>
-            <p key={graph.dataKey} className="intro">{graph.name}: {graph.value}</p>
+            <p key={graph.dataKey} className="intro">{graph.name}: {Math.round(graph.value)}</p>
           </>
         }))}
         <p className="desc">{data?.query ?? fallBackName}</p>

@@ -14,6 +14,19 @@ schema_linear = {
     'additionalProperties': False
 }
 
+schema_arma = {
+    'type': 'object',
+    'properties': {
+        'query': {'type': 'string'},
+        'start_date': {'type': 'string'},
+        'end_date': {'type': 'string'},
+        'trunc_by': {'type': 'string'},
+        'order': {'type': 'tuple'}
+    },
+    'required': ['query'],
+    'additionalProperties': False
+}
+
 class LinearRegressionInputs(Inputs):
     json = [JsonSchema(schema=schema_linear)]
 

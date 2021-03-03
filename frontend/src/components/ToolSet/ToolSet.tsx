@@ -20,10 +20,11 @@ export const ToolSet = () => {
 
   const fetchData = React.useCallback(() => {
     setLoading(true)
-    Api.linearRegression({
+    Api.sarmaRegression({
       query: query,
       start_date: startDate,
       end_date: endDate,
+      trunc_by: 'hour',
     }).then((res) => {
       console.log(res)
       setData(res['dataset'])
