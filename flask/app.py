@@ -15,6 +15,7 @@ from .models.search_record import SearchRecord
 from .functions.utils.sanitizer import *
 from .functions.regression.linear import handle_linear_regression
 from .functions.regression.arma import handle_arma_regression
+from .functions.regression.sarma import handle_sarma_regression
 
 
 app = Flask(__name__)
@@ -37,3 +38,8 @@ def linear_regression():
 @cross_origin()
 def arma_regression():
     return handle_arma_regression(db)
+
+@app.route('/sarma-regression', methods=['POST'])
+@cross_origin()
+def sarma_regression():
+    return handle_sarma_regression(db)
