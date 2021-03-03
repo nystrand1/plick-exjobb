@@ -16,6 +16,7 @@ from ..utils.merge import *
 
 TRAIN_SIZE_PERCENTAGE = 60
 
+#Find best arima model using grid search
 def find_best_arima(dataset, p_values=[1], d_values=[1], q_values=[1,2,3]):
     warnings.filterwarnings("ignore")
     best_score, best_model, best_order = float("inf"), None, None
