@@ -12,3 +12,4 @@ flask-inputs
 jsonschema
 statsmodels
 joblib
+pmdarima
