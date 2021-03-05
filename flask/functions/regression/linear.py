@@ -17,7 +17,7 @@ def handle_linear_regression(db):
         db=db, **data)
     model_scores = dict()
     if len(dataset) > 1:
-        for n in range(20, 22):
+        for n in range(1,4):
             key_name = "degree {}".format(n)
             linear_model = get_linear_model(dataset, n)
             trend_dataset = generate_linear_series_from_model(
