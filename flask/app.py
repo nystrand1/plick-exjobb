@@ -16,6 +16,8 @@ from .functions.utils.sanitizer import *
 from .functions.regression.linear import handle_linear_regression
 from .functions.regression.arma import handle_arma_regression
 from .functions.regression.sarma import handle_sarma_regression
+from .functions.regression.lstm import handle_lstm
+from .functions.regression.auto_sarima import handle_auto_sarima_regression
 
 
 app = Flask(__name__)
@@ -43,3 +45,13 @@ def arma_regression():
 @cross_origin()
 def sarma_regression():
     return handle_sarma_regression(db)
+
+@app.route('/lstm', methods=['POST'])
+@cross_origin()
+def lstm():
+    return handle_lstm(db)
+
+@app.route('/auto-sarima', methods=['POST'])
+@cross_origin()
+def auto_arima():
+    return handle_auto_sarima_regression(db)
