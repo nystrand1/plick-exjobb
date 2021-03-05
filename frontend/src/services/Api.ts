@@ -24,6 +24,10 @@ export class Api {
     return this.post("sarma-regression", data);
   }
 
+  static async autoSarima(data: ICountRequestData) {
+    return this.post("auto-sarima", data);
+  }
+
   static async get(endpoint : string, data = {}) {
     const response = await axios.get(endpoint, data);
     return response.data;
