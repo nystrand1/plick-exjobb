@@ -10,6 +10,8 @@ from flask import request
 from ..count_interval import *
 from ..utils.generator import *
 from ..utils.merge import *
+from ...models.long_term_trend import LongTermTrend
+
 
 def handle_linear_regression(db):
     data = request.json
@@ -17,12 +19,16 @@ def handle_linear_regression(db):
         db=db, **data)
     model_scores = dict()
     if len(dataset) > 1:
-        for n in range(1,4):
+        for n in range(1, 2):
             key_name = "degree {}".format(n)
             linear_model = get_linear_model(dataset, n)
+            save_to_db(db, linear_model, data['query'], "1 month")
+            decompose_trend = generate_trend_from_decompose(dataset)
             trend_dataset = generate_linear_series_from_model(
                 len(dataset), linear_model)
             dataset = merge_datasets(dataset, trend_dataset, key_name=key_name)
+            dataset = merge_datasets(
+                dataset, decompose_trend, key_name="Decompose trend")
             model_score = get_model_score(dataset, trend_key=key_name)
             model_scores[key_name] = model_score
             logging.debug(model_score)
@@ -32,6 +38,7 @@ def handle_linear_regression(db):
         'model_scores': model_scores
     }
     return res
+
 
 def get_linear_model(dataset, degree=1):
     data = dict()
@@ -45,10 +52,19 @@ def get_linear_model(dataset, degree=1):
     x = formatted_data.time_slices
     y = formatted_data.amount
     model = np.polyfit(x, y, degree)
+    logging.debug(model)
     return model.tolist()
+
 
 def get_model_score(combined_dataset, trend_key):
     y = [d['count'] for d in combined_dataset]
     y_pred = [d['trends'][trend_key] for d in combined_dataset]
     score = r2_score(y, y_pred)
     return score
+
+
+def save_to_db(db, model, query, interval="1 month"):
+    record = LongTermTrend(
+        query=query, k_value=model[0], interval=interval, created_at=datetime.now(), updated_at=datetime.now())
+    record.create()
+    db.session.add(record)

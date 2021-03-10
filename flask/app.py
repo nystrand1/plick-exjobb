@@ -13,7 +13,9 @@ from http import HTTPStatus
 
 from .models.search_record import SearchRecord
 from .functions.utils.sanitizer import *
-from .functions.regression.linear import handle_linear_regression
+from .functions.query_filter import *
+from .functions.count_interval import *
+from .functions.regression.linear import *
 from .functions.regression.arma import handle_arma_regression
 from .functions.regression.sarma import handle_sarma_regression
 from .functions.regression.lstm import handle_lstm
@@ -24,6 +26,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = config('SQLALCHEMY_DATABASE_URI')
 cache = redis.Redis(host='redis', port=6379)
 db = sa(app)
+
 CORS(app, resources={r"/*": {"origins": "*"}})
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
@@ -55,3 +58,19 @@ def lstm():
 @cross_origin()
 def auto_arima():
     return handle_auto_sarima_regression(db)
+
+@app.route('/query-candidates', methods=['GET'])
+@cross_origin()
+def query_candidates():
+    res = get_query_candidates(db)
+    data = dict()
+    data['start_date'] = "2021-01-01"
+    data['end_date'] = "2021-02-18"
+    data['trunc_by'] = "day"
+    for r in res:
+        data['query'] = r['query']
+        dataset = count_interval_unique(db, **data)
+        linear_model = get_linear_model(dataset)
+        save_to_db(db, linear_model, data['query'], "1 month")
+    db.session.commit()
+    return Response(json.dumps(get_query_candidates(db)), status=HTTPStatus.OK, content_type="application/json")

@@ -20,11 +20,11 @@ export const ToolSet = () => {
 
   const fetchData = React.useCallback(() => {
     setLoading(true)
-    Api.autoSarima({
+    Api.linearRegression({
       query: query,
       start_date: startDate,
       end_date: endDate,
-      trunc_by: 'hour',
+      trunc_by: 'day',
     }).then((res) => {
       console.log(res)
       setData(res['dataset'])
