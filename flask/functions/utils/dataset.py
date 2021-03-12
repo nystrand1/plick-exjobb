@@ -1,5 +1,6 @@
 import logging
 import math
+from datetime import datetime, timedelta
 
 def merge_datasets(dataset_1, dataset_2, key_name = "degree 1"):
     for (i, data) in enumerate(dataset_1):
@@ -22,3 +23,17 @@ def merge_partial_dataset(dataset_1, dataset_2, key_name = "degree 1"):
             data['trends'][key_name] = dataset_2[i]
         start_index+=1
     return dataset_1
+
+def split_dataset(dataset):
+    latest_date = datetime.strptime(dataset[-1]['time_interval'], '%Y-%m-%d %H:%M:%S')
+    mid_date = latest_date - timedelta(days=31)
+    mid_date = datetime.strftime(mid_date, '%Y-%m-%d %H:%M:%S')
+    mid_index = [(index, d) for index, d in enumerate(dataset) if d['time_interval'] ==  mid_date][0][0]
+    short_date = latest_date - timedelta(days=7)
+    short_date = datetime.strftime(short_date, '%Y-%m-%d %H:%M:%S')
+    short_index = [(index, d) for index, d in enumerate(dataset) if d['time_interval'] ==  short_date][0][0]
+    res = dict()
+    res['long'] = dataset
+    res['mid'] = dataset[mid_index:]
+    res['short'] = dataset[short_index:]
+    return res

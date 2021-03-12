@@ -23,7 +23,7 @@ def get_query_candidates(db, seperate_brand_categories = False):
         AND
         created_at > '2021-02-18'::date - interval '7 day'
         GROUP BY query
-        HAVING count(query) > 1000
+        HAVING count(query) > 5000
         ORDER BY amount DESC
         """)
 
@@ -34,3 +34,40 @@ def get_query_candidates(db, seperate_brand_categories = False):
         res_arr.append(r)
     
     return res_arr
+
+
+def use_strict(query):
+    splitted = query.split()
+    return len(splitted) > 1 and len(splitted[0]) > 2 and len(splitted[1]) > 2
+
+
+def get_similar_words(db, query, similarity_threshold = 0.6, length_interval = 2):
+    method = "word_similarity"
+    if(use_strict(query)):
+        similarity_threshold = 0.6
+        method = "strict_word_similarity"
+
+    logging.debug("USING METHOD: {}".format(method))
+    res = db.session.execute("""
+    SELECT query, {}(:query, query) as sim, count(query) as amount
+    FROM search_records.search_record
+    WHERE query % :query
+    AND LENGTH(query) BETWEEN LENGTH(:query) - :interval AND LENGTH(:query) + :interval
+    AND {}(:query, query) > :threshold
+    GROUP BY query
+    HAVING count(query) > 100
+    ORDER BY sim DESC
+    """.format(method, method), {
+        'query': query,
+        'threshold': similarity_threshold,
+        'interval': length_interval
+    })
+
+    res_arr = []
+
+    for r in res:
+        r = dict(r.items())
+        res_arr.append(r['query'])
+
+    return res_arr
+

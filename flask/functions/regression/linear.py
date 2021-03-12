@@ -9,26 +9,28 @@ from flask import request
 
 from ..count_interval import *
 from ..utils.generator import *
-from ..utils.merge import *
-from ...models.long_term_trend import LongTermTrend
+from ..utils.dataset import *
+from ..query_filter import *
+from ...models.term_trend import TermTrend
 
 
 def handle_linear_regression(db):
     data = request.json
-    dataset = count_interval_unique(
+    data['similar_queries'] = get_similar_words(db, data['query'])
+    dataset = count_interval_unique_similar(
         db=db, **data)
     model_scores = dict()
     if len(dataset) > 1:
         for n in range(1, 2):
             key_name = "degree {}".format(n)
             linear_model = get_linear_model(dataset, n)
-            save_to_db(db, linear_model, data['query'], "1 month")
-            decompose_trend = generate_trend_from_decompose(dataset)
+            #save_to_db(db, linear_model, data['query'], "1 month")
+            #decompose_trend = generate_trend_from_decompose(dataset)
             trend_dataset = generate_linear_series_from_model(
                 len(dataset), linear_model)
             dataset = merge_datasets(dataset, trend_dataset, key_name=key_name)
-            dataset = merge_datasets(
-                dataset, decompose_trend, key_name="Decompose trend")
+            # dataset = merge_datasets(
+            #    dataset, decompose_trend, key_name="Decompose trend")
             model_score = get_model_score(dataset, trend_key=key_name)
             model_scores[key_name] = model_score
             logging.debug(model_score)
@@ -63,8 +65,8 @@ def get_model_score(combined_dataset, trend_key):
     return score
 
 
-def save_to_db(db, model, query, interval="1 month"):
-    record = LongTermTrend(
-        query=query, k_value=model[0], interval=interval, created_at=datetime.now(), updated_at=datetime.now())
+def save_to_db(db, query, model_short, model_mid, model_long, similar_queries):
+    record = TermTrend(
+        query=query, model_short=model_short, model_mid=model_mid, model_long=model_long, similar_queries=similar_queries, created_at=datetime.now(), updated_at=datetime.now())
     record.create()
     db.session.add(record)

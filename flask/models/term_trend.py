@@ -2,13 +2,15 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-class LongTermTrend(db.Model):
+class TermTrend(db.Model):
     __table_args__ = {"schema":"search_records"}
-    __tablename__ = 'long_term_trends'
+    __tablename__ = 'term_trends'
     id = db.Column(db.Integer, autoincrement=True)
     query = db.Column(db.String(80), primary_key=True)
-    k_value = db.Column(db.Float(48))
-    interval = db.Column(db.String(80))
+    model_short = db.Column(db.ARRAY(db.Float))
+    model_mid = db.Column(db.ARRAY(db.Float))
+    model_long = db.Column(db.ARRAY(db.Float))
+    similar_queries = db.Column(db.ARRAY(db.String))
     created_at = db.Column(db.String(100))
     updated_at = db.Column(db.String(100))  
 

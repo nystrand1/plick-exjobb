@@ -12,7 +12,7 @@ import logging
 
 from ..count_interval import *
 from ..utils.generator import *
-from ..utils.merge import *
+from ..utils.dataset import *
 
 TRAIN_SIZE_PERCENTAGE = 85
 

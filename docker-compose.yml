@@ -3,6 +3,7 @@ version: "3.3"
 services:
   postgres:
       image: postgres
+      shm_size: 1g
       container_name: exjobb.postgres
       expose:
         - "5432"
