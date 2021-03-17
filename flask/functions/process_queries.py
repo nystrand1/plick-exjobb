@@ -5,7 +5,8 @@ from .count_interval import *
 from .regression.linear import *
 
 
-def process_query(db, data):
+def process_query(db, data, r, processed_queries):
+    logging.debug(processed_queries)
     data['query'] = r['query']
     if data['query'] in processed_queries:
         logging.debug("WORD ALDREADY PROCESSED: {}".format(data['query']))
@@ -20,7 +21,9 @@ def process_query(db, data):
     logging.debug("LONG MODEL: {}".format(linear_model_long))
     logging.debug("MID MODEL: {}".format(linear_model_mid))
     logging.debug("SHORT MODEL: {}".format(linear_model_short))
-    data['similar_queries'].remove(data['query'])
-    save_to_db(db, data['query'], linear_model_short, linear_model_mid, linear_model_long, data['similar_queries'])
     processed_queries.extend(data['similar_queries'])
-    db.session.commit()
+    try:
+        data['similar_queries'].remove(data['query'])
+    except:
+        logging.debug("COULD NOT REMOVE: {}".format(data['query']))
+    save_to_db(db, data['query'], linear_model_short, linear_model_mid, linear_model_long, data['similar_queries'])

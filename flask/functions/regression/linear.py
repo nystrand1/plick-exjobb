@@ -37,7 +37,8 @@ def handle_linear_regression(db):
     logging.debug(dataset)
     res = {
         'dataset': dataset,
-        'model_scores': model_scores
+        'model_scores': model_scores,
+        'similar_queries': data['similar_queries']
     }
     return res
 
