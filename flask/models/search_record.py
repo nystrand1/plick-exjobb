@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 class SearchRecord(db.Model):
-    __tablename__ = 'search_records'
+    __tablename__ = 'plick'
     id = db.Column(db.Integer, primary_key=True)
     query = db.Column(db.String(80))
     category_id = db.Column(db.Integer)

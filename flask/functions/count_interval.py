@@ -11,7 +11,7 @@ def count_interval_grouped(db, query="nike", interval_mins=60, start_date="2021-
         (SELECT :query as query, count(query) amount,
         TIMESTAMP WITH TIME ZONE 'epoch' +
         INTERVAL '1 second' * floor(extract('epoch' from created_at) / (:mins *60)) * (:mins *60) as time_interval
-        FROM search_records.search_record  
+        FROM plick.search_record  
         WHERE query LIKE :query
         AND
         created_at BETWEEN (:start_date)::date AND (:end_date)::date + interval '1 day'
@@ -52,7 +52,7 @@ def count_interval_individual(db, query="nike", interval_mins=60, start_date="20
         (SELECT query, count(query) amount,
         TIMESTAMP WITH TIME ZONE 'epoch' +
         INTERVAL '1 second' * floor(extract('epoch' from created_at) / (:mins *60)) * (:mins *60) as time_interval
-        FROM search_records.search_record  
+        FROM plick.search_record  
         WHERE query LIKE :query
         AND
         created_at BETWEEN  (:start_date)::date AND (:end_date)::date
@@ -93,7 +93,7 @@ def count_interval_unique(db, query="nike", trunc_by="hour", start_date="2021-01
         (SELECT :query as query, count(distinct coalesce(user_id, 0)) as amount,
         TIMESTAMP WITH TIME ZONE 'epoch' +
         INTERVAL '1 second' * floor(extract('epoch' from created_at) / (60*15)) * (60*15) as time_interval
-        FROM search_records.search_record  
+        FROM plick.search_record  
         WHERE query LIKE :query
         AND
         created_at BETWEEN (:start_date)::date AND (:end_date)::date + interval '1 day'
@@ -130,7 +130,7 @@ def count_interval_unique_similar(db, query="nike", trunc_by="hour", start_date=
         (SELECT query, count(distinct coalesce(user_id, 0)) as amount,
         TIMESTAMP WITH TIME ZONE 'epoch' +
         INTERVAL '1 second' * floor(extract('epoch' from created_at) / (60*15)) * (60*15) as time_interval
-        FROM search_records.search_record  
+        FROM plick.search_record  
         WHERE query LIKE ANY(:similar_queries)
         AND
         created_at BETWEEN (:start_date)::date AND (:end_date)::date + interval '1 day'

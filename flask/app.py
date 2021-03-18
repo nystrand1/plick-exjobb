@@ -72,7 +72,7 @@ def query_candidates():
     res = get_query_candidates(db)
     data = dict()
     data['start_date'] = "2021-01-01"
-    data['end_date'] = "2021-02-18"
+    data['end_date'] = "2021-03-15"
     data['trunc_by'] = "day"
     db.session.query(TermTrend).delete()
     db.session.commit()
@@ -80,3 +80,10 @@ def query_candidates():
     [process_query(db, data, r, processed_queries) for r in res]
     db.session.commit()
     return Response(json.dumps(get_query_candidates(db)), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/trending-words', methods=['GET'])
+@cross_origin()
+def trending_words():
+    res = get_trending_words(db)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+ 
