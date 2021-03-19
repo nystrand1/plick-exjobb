@@ -5,7 +5,6 @@ db = SQLAlchemy()
 class TermTrend(db.Model):
     __table_args__ = {"schema":"plick"}
     __tablename__ = 'term_trends'
-    id = db.Column(db.Integer, autoincrement=True)
     query = db.Column(db.String(80), primary_key=True)
     model_short = db.Column(db.ARRAY(db.Float))
     model_mid = db.Column(db.ARRAY(db.Float))
