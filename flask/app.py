@@ -74,9 +74,8 @@ def query_candidates():
     data['start_date'] = "2021-01-01"
     data['end_date'] = "2021-03-15"
     data['trunc_by'] = "day"
-    db.session.query(TermTrend).delete()
-    db.session.commit()
     processed_queries = []
+    db.create_all()
     [process_query(db, data, r, processed_queries) for r in res]
     db.session.commit()
     return Response(json.dumps(get_query_candidates(db)), status=HTTPStatus.OK, content_type="application/json")

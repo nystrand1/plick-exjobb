@@ -60,7 +60,7 @@ def get_similar_words(db, query, similarity_threshold = 0.6, length_interval = 2
     ORDER BY sim DESC
     """.format(method, method), {
         'query': query,
-        'threshold': similarity_threshold,
+        'threshold': 1 - similarity_threshold,
         'interval': length_interval
     })
 

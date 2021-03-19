@@ -35,6 +35,10 @@ def handle_linear_regression(db):
             model_scores[key_name] = model_score
             logging.debug(model_score)
     logging.debug(dataset)
+    try:
+        data['similar_queries'].remove(data['query'])
+    except:
+        logging.debug("COULD NOT REMOVE: {}".format(data['query']))
     res = {
         'dataset': dataset,
         'model_scores': model_scores,
@@ -67,7 +71,14 @@ def get_model_score(combined_dataset, trend_key):
 
 
 def save_to_db(db, query, model_short, model_mid, model_long, similar_queries):
-    record = TermTrend(
-        query=query, model_short=model_short, model_mid=model_mid, model_long=model_long, similar_queries=similar_queries, created_at=datetime.now(), updated_at=datetime.now())
-    record.create()
-    db.session.add(record)
+    TermTrend().create()
+    record = db.session.query(TermTrend).get(query)
+    if(record is not None):
+        record.model_long = model_long
+        record.model_mid = model_mid
+        record.model_short = model_short
+        record.similar_queries = similar_queries
+    else:
+        record = TermTrend(
+            query=query, model_short=model_short, model_mid=model_mid, model_long=model_long, similar_queries=similar_queries, created_at=datetime.now(), updated_at=datetime.now())
+        db.session.add(record)

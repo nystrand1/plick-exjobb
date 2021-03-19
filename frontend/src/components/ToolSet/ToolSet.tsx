@@ -27,13 +27,14 @@ export const ToolSet = () => {
       trunc_by: 'day',
     }).then((res) => {
       console.log(res)
-      setData(res['dataset'])
+      res['similarWords'] = res['similar_queries'];
+      setData(res)
       setLoading(false)
     })
   }, [startDate, endDate, query, setData, setLoading])
 
   React.useEffect(() => {
-    if (!data.length) {
+    if (!data) {
       fetchData()
     }
   }, [data, fetchData])

@@ -1,8 +1,14 @@
-interface IData {
+interface IDataSet {
   count: number
   query: string
   timeInterval: string
   trends: {[key: string]: number}
+}
+
+interface IData {
+  dataset: IDataSet[]
+  similarWords: string[]
+  modelScores: {[key: string]: number}
 }
 
 interface ICountRequestData {
