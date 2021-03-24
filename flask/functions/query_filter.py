@@ -1,4 +1,7 @@
 import logging
+import redis
+import json
+cache = redis.Redis(host='redis', port=6379)
 
 
 def get_query_candidates(db, seperate_brand_categories = False):
@@ -23,14 +26,13 @@ def get_query_candidates(db, seperate_brand_categories = False):
         AND
         created_at > '2021-03-15'::date - interval '7 day'
         GROUP BY query
-        HAVING count(query) > 5000
+        HAVING count(query) > 300
         ORDER BY amount DESC
         """)
 
     res_arr = []
 
     for r in res:
-        r = dict(r.items())
         res_arr.append(r)
     
     return res_arr
@@ -42,6 +44,12 @@ def use_strict(query):
 
 
 def get_similar_words(db, query, similarity_threshold = 0.6, length_interval = 2):
+    CACHE_KEY = "_SIMQUERY:{}".format(query)
+    
+    if (cache.get(CACHE_KEY)):
+        logging.debug("GETTING SIMILAR WORDS FROM CACHE")
+        return json.loads(cache.get(CACHE_KEY))
+
     method = "word_similarity"
     if(use_strict(query)):
         similarity_threshold = 0.6
@@ -67,9 +75,9 @@ def get_similar_words(db, query, similarity_threshold = 0.6, length_interval = 2
     res_arr = []
 
     for r in res:
-        r = dict(r.items())
         res_arr.append(r['query'])
 
+    cache.set(CACHE_KEY, json.dumps(res_arr))
     return res_arr
 
 
@@ -89,6 +97,8 @@ def get_trending_words(db, limit=5, k_threshold=0):
     res_arr = []
 
     for r in res:
-        r = dict(r.items())
-        res_arr.append(r)
-    return res_arr
+        tmp = dict()
+        tmp['query'] = r['query']
+        tmp['similar_queries'] = r['similar_queries']
+        res_arr.append(tmp)
+    return res_arr  

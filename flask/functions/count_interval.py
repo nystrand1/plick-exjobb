@@ -1,5 +1,7 @@
 import logging
-
+import redis
+import json
+cache = redis.Redis(host='redis', port=6379)
 
 """
 Count grouped occurrences, for example when query is 'nike%' it will count
@@ -34,7 +36,6 @@ def count_interval_grouped(db, query="nike", interval_mins=60, start_date="2021-
     })
     res_arr = []
     for r in res:
-        r = dict(r.items())
         r['start_date'] = start_date
         r['end_date'] = end_date
         r['trends'] = dict()
@@ -74,7 +75,6 @@ def count_interval_individual(db, query="nike", interval_mins=60, start_date="20
     })
     res_arr = []
     for r in res:
-        r = dict(r.items())
         res_arr.append(r)
         r['trends'] = dict()
     res_arr.reverse()
@@ -116,7 +116,6 @@ def count_interval_unique(db, query="nike", trunc_by="hour", start_date="2021-01
     })
     res_arr = []
     for r in res:
-        r = dict(r.items())
         r['count'] = int(r['count'])
         r['trends'] = dict()
         res_arr.append(r)
@@ -125,6 +124,11 @@ def count_interval_unique(db, query="nike", trunc_by="hour", start_date="2021-01
 
 def count_interval_unique_similar(db, query="nike", trunc_by="hour", start_date="2021-01-25", end_date="2021-01-31", similar_queries = []):
     logging.debug("DB SIMILAR WORDS: {}".format(similar_queries))
+    CACHE_KEY = "_COUNTSIM:{}:FROM:{}:TO:{}".format(query, start_date, end_date)
+    if (cache.get(CACHE_KEY)):
+        logging.debug("GETTING INTERVAL FROM CACHE")
+        return json.loads(cache.get(CACHE_KEY))
+
     res = db.session.execute("""
         SELECT :query as query, to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval, sum(coalesce(count.amount,0)) as count from 
         (SELECT query, count(distinct coalesce(user_id, 0)) as amount,
@@ -154,9 +158,13 @@ def count_interval_unique_similar(db, query="nike", trunc_by="hour", start_date=
     })
     res_arr = []
     for r in res:
-        r = dict(r.items())
-        r['count'] = int(r['count'])
-        r['trends'] = dict()
-        res_arr.append(r)
+        tmp = dict()
+        tmp['count'] = int(r['count'])
+        tmp['trends'] = dict()
+        tmp['time_interval'] = r['time_interval']
+        #r['count'] = int(r['count'])
+        #r['trends'] = dict()
+        res_arr.append(tmp)
     res_arr.reverse()
+    cache.set(CACHE_KEY, json.dumps(res_arr))
     return res_arr

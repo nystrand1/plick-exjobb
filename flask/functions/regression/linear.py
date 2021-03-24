@@ -10,6 +10,7 @@ from flask import request
 from ..count_interval import *
 from ..utils.generator import *
 from ..utils.dataset import *
+from ..utils.plick import *
 from ..query_filter import *
 from ...models.term_trend import TermTrend
 
@@ -35,12 +36,16 @@ def handle_linear_regression(db):
             model_scores[key_name] = model_score
             logging.debug(model_score)
     logging.debug(dataset)
+
+    related_ads = get_ads(data['query'])
+
     try:
         data['similar_queries'].remove(data['query'])
     except:
         logging.debug("COULD NOT REMOVE: {}".format(data['query']))
     res = {
         'dataset': dataset,
+        'related_ads': related_ads,
         'model_scores': model_scores,
         'similar_queries': data['similar_queries']
     }

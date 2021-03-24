@@ -9,6 +9,7 @@ from flask import Flask, request, Response
 from flask_sqlalchemy import SQLAlchemy as sa
 from flask_sqlalchemy import Model
 from flask_cors import CORS, cross_origin
+from flask_caching import Cache
 from http import HTTPStatus
 
 import multiprocessing
@@ -27,6 +28,7 @@ from .functions.regression.lstm import handle_lstm
 from .functions.regression.auto_sarima import handle_auto_sarima_regression
 from .functions.utils.dataset import *
 from .functions.process_queries import *
+from .functions.utils.plick import *
 
 
 app = Flask(__name__)
@@ -85,4 +87,9 @@ def query_candidates():
 def trending_words():
     res = get_trending_words(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
- 
+
+@app.route('/trending-ads', methods=['GET'])
+@cross_origin()
+def get_trending_ads():
+    res = get_ads("nike")
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")

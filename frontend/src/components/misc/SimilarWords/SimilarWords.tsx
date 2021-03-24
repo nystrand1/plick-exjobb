@@ -11,6 +11,7 @@ export const SimilarWords = ({ words }: SimilarWordsProps) => {
   }, []);
   return (
     <div className={s.similarWords}>
+      <h4>Similar words:</h4>
       {words?.map((word) => {
         return <p>{word}</p>
       })}

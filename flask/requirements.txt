@@ -13,3 +13,5 @@ jsonschema
 statsmodels
 joblib
 pmdarima
+flask-caching
+requests
