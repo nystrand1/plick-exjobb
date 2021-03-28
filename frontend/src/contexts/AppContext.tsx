@@ -6,6 +6,8 @@ const useProviderValue = () => {
   const [startDate, setStartDate] = React.useState(new Date('2021-01-01'))
   const [endDate, setEndDate] = React.useState(new Date('2021-02-18'))
   const [loading, setLoading] = React.useState(true)
+  const [graphData, setGraphData] = React.useState<IDataSet[]>()
+  const [resolution, setResolution] = React.useState("day")
 
   const value = React.useMemo(
     () => ({
@@ -14,6 +16,10 @@ const useProviderValue = () => {
       startDate,
       endDate,
       loading,
+      graphData,
+      resolution,
+      setResolution,
+      setGraphData,
       setLoading,
       setData,
       setQuery,
@@ -26,6 +32,10 @@ const useProviderValue = () => {
       startDate,
       endDate,
       loading,
+      graphData,
+      resolution,
+      setResolution,
+      setGraphData,
       setData,
       setQuery,
       setStartDate,

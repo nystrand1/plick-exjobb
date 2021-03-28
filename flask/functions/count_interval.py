@@ -7,6 +7,8 @@ cache = redis.Redis(host='redis', port=6379)
 Count grouped occurrences, for example when query is 'nike%' it will count
 'nike air' and 'nike shorts' as same data points
 """
+
+
 def count_interval_grouped(db, query="nike", interval_mins=60, start_date="2021-01-14", end_date="2021-01-15"):
     res = db.session.execute("""
         SELECT query, to_char(series.time_interval, :date_format) as time_interval, coalesce(count.amount,0) as count from 
@@ -43,10 +45,13 @@ def count_interval_grouped(db, query="nike", interval_mins=60, start_date="2021-
     res_arr.reverse()
     return res_arr
 
+
 """
 Count indvidual occurrences, for example when query is 'nike%' it will count
 'nike air' and 'nike shorts' as individual data points
 """
+
+
 def count_interval_individual(db, query="nike", interval_mins=60, start_date="2020-12-30", end_date="2020-12-31"):
     res = db.session.execute("""
         SELECT query, to_char(series.time_interval, 'YYYY-MM-DD HH24:MI:SS') as time_interval, coalesce(count.amount,0) as count from 
@@ -87,6 +92,8 @@ Example user 1337 searches for 'nike' 5 times in 10 minute. This
 will be counted as 1 occurence in order to minimize the impact 
 of the trend.
 """
+
+
 def count_interval_unique(db, query="nike", trunc_by="hour", start_date="2021-01-25", end_date="2021-01-31"):
     res = db.session.execute("""
         SELECT :query as query, to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval, sum(coalesce(count.amount,0)) as count from 
@@ -122,9 +129,10 @@ def count_interval_unique(db, query="nike", trunc_by="hour", start_date="2021-01
     res_arr.reverse()
     return res_arr
 
-def count_interval_unique_similar(db, query="nike", trunc_by="hour", start_date="2021-01-25", end_date="2021-01-31", similar_queries = []):
-    logging.debug("DB SIMILAR WORDS: {}".format(similar_queries))
-    CACHE_KEY = "_COUNTSIM:{}:FROM:{}:TO:{}".format(query, start_date, end_date)
+
+def count_interval_unique_similar(db, query="nike", trunc_by="hour", start_date="2021-01-25", end_date="2021-01-31", similar_queries=[]):
+    CACHE_KEY = "_COUNTSIM:{}:FROM:{}:TO:{}:TRUNC_BY:{}".format(
+        query, start_date, end_date, trunc_by)
     if (cache.get(CACHE_KEY)):
         logging.debug("GETTING INTERVAL FROM CACHE")
         return json.loads(cache.get(CACHE_KEY))
@@ -166,5 +174,19 @@ def count_interval_unique_similar(db, query="nike", trunc_by="hour", start_date=
         #r['trends'] = dict()
         res_arr.append(tmp)
     res_arr.reverse()
-    cache.set(CACHE_KEY, json.dumps(res_arr))
+    cache.set(CACHE_KEY, json.dumps(res_arr), 300)
     return res_arr
+
+def get_query_dataset(db, query): 
+    res = db.session.execute("""
+        SELECT *
+        FROM plick.term_trends
+        WHERE query like :query
+    """, {
+        'query': query
+    })
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+    res_arr.reverse()
+    return res_arr[0]

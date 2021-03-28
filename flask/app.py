@@ -75,18 +75,33 @@ def query_candidates():
     data = dict()
     data['start_date'] = "2021-01-01"
     data['end_date'] = "2021-03-15"
-    data['trunc_by'] = "day"
     processed_queries = []
     db.create_all()
     [process_query(db, data, r, processed_queries) for r in res]
     db.session.commit()
-    return Response(json.dumps(get_query_candidates(db)), status=HTTPStatus.OK, content_type="application/json")
+    res_arr = []
+    for row in res:
+        res_arr.append(list(row))
+    return Response(json.dumps(res_arr), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-words', methods=['GET'])
 @cross_origin()
 def trending_words():
     res = get_trending_words(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/trending-categories', methods=['GET'])
+@cross_origin()
+def trending_categories():
+    res = get_trending_categories(db)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/trending-brands', methods=['GET'])
+@cross_origin()
+def trending_brands():
+    res = get_trending_brands(db)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/trending-ads', methods=['GET'])
 @cross_origin()

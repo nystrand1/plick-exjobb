@@ -43,33 +43,41 @@ def use_strict(query):
     return len(splitted) > 1 and len(splitted[0]) > 2 and len(splitted[1]) > 2
 
 
-def get_similar_words(db, query, similarity_threshold = 0.6, length_interval = 2):
-    CACHE_KEY = "_SIMQUERY:{}".format(query)
+def get_similar_words(db, query, similarity_threshold = 0.59):
+    CACHE_KEY = "_SIMQUERY:{}_SIMTHRESHOLD:{}".format(query, similarity_threshold)
     
     if (cache.get(CACHE_KEY)):
         logging.debug("GETTING SIMILAR WORDS FROM CACHE")
         return json.loads(cache.get(CACHE_KEY))
 
-    method = "word_similarity"
-    if(use_strict(query)):
-        similarity_threshold = 0.6
-        method = "strict_word_similarity"
+    # method = "word_similarity"
+    # if(use_strict(query)):
+    #     similarity_threshold = 0.6
+    #     method = "strict_word_similarity"
 
-    logging.debug("USING METHOD: {}".format(method))
+    # logging.debug("USING METHOD: {}".format(method))
     res = db.session.execute("""
     SET work_mem='12MB';
     SET pg_trgm.similarity_threshold = :threshold;
-    SELECT query, {}(:query, query) as sim, count(query) as amount
+    SET pg_trgm.word_similarity_threshold = :threshold;
+    SET pg_trgm.strict_word_similarity_threshold = :threshold;
+    SELECT query, similarity(query, :query) as sim,
+    word_similarity(query, :query) as word_sim,
+    strict_word_similarity(query, :query) as strict_word_sim,
+    count(query) as amount
     FROM plick.search_record
-    WHERE query % :query
-    AND LENGTH(query) BETWEEN LENGTH(:query) - :interval AND LENGTH(:query) + :interval
+    WHERE 
+    :query % query
+    AND
+    :query %> query
+    AND
+    :query %>> query
     GROUP BY query
     HAVING count(query) > 100
     ORDER BY sim DESC
-    """.format(method, method), {
+    """, {
         'query': query,
-        'threshold': 1 - similarity_threshold,
-        'interval': length_interval
+        'threshold': similarity_threshold,
     })
 
     res_arr = []
@@ -77,7 +85,7 @@ def get_similar_words(db, query, similarity_threshold = 0.6, length_interval = 2
     for r in res:
         res_arr.append(r['query'])
 
-    cache.set(CACHE_KEY, json.dumps(res_arr))
+    cache.set(CACHE_KEY, json.dumps(res_arr), 300)
     return res_arr
 
 

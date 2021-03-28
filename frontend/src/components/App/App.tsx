@@ -6,10 +6,10 @@ import { useContext } from '~contexts'
 
 
 export const App = () => {
-  const { query, loading, data } = useContext();
+  const { query, loading, data, graphData } = useContext();
   React.useEffect(() => {
-    console.log(data);
-  }, [loading]);
+    console.log(graphData);
+  }, [loading, data]);
   return (
     <div className={s.appWrapper}>
       <header className={s.header}>
@@ -19,7 +19,7 @@ export const App = () => {
           ) : (
             <>
               <LineGraph
-                data={data?.dataset}
+                data={graphData}
                 xLabel={'Time'}
                 yLabel={'Count'}
                 zLabel={'Query'}

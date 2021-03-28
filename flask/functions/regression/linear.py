@@ -17,37 +17,22 @@ from ...models.term_trend import TermTrend
 
 def handle_linear_regression(db):
     data = request.json
-    data['similar_queries'] = get_similar_words(db, data['query'])
-    dataset = count_interval_unique_similar(
-        db=db, **data)
-    model_scores = dict()
-    if len(dataset) > 1:
+    query = data['query']
+    dataset = get_query_dataset(db, query)
+    time_series = dataset['time_series_hour']
+    if len(time_series) > 1:
         for n in range(1, 2):
             key_name = "degree {}".format(n)
-            linear_model = get_linear_model(dataset, n)
-            #save_to_db(db, linear_model, data['query'], "1 month")
-            #decompose_trend = generate_trend_from_decompose(dataset)
+            linear_model = get_linear_model(time_series, n)
             trend_dataset = generate_linear_series_from_model(
-                len(dataset), linear_model)
-            dataset = merge_datasets(dataset, trend_dataset, key_name=key_name)
-            # dataset = merge_datasets(
-            #    dataset, decompose_trend, key_name="Decompose trend")
-            model_score = get_model_score(dataset, trend_key=key_name)
-            model_scores[key_name] = model_score
-            logging.debug(model_score)
-    logging.debug(dataset)
+                len(time_series), linear_model)
+            time_series = merge_datasets(time_series, trend_dataset, key_name=key_name)
+    logging.debug(time_series)
 
-    related_ads = get_ads(data['query'])
-
-    try:
-        data['similar_queries'].remove(data['query'])
-    except:
-        logging.debug("COULD NOT REMOVE: {}".format(data['query']))
+    related_ads = get_ads(query)
     res = {
         'dataset': dataset,
         'related_ads': related_ads,
-        'model_scores': model_scores,
-        'similar_queries': data['similar_queries']
     }
     return res
 
@@ -75,15 +60,15 @@ def get_model_score(combined_dataset, trend_key):
     return score
 
 
-def save_to_db(db, query, model_short, model_mid, model_long, similar_queries):
+def save_to_db(db, data):
     TermTrend().create()
-    record = db.session.query(TermTrend).get(query)
+    record = db.session.query(TermTrend).get(data['query'])
     if(record is not None):
-        record.model_long = model_long
-        record.model_mid = model_mid
-        record.model_short = model_short
-        record.similar_queries = similar_queries
+        record.model_long = data['model_long']
+        record.model_mid = data['model_mid']
+        record.model_short = data['model_short']
+        record.similar_queries = data['similar_queries']
+        record.updated_at = data['updated_at']
     else:
-        record = TermTrend(
-            query=query, model_short=model_short, model_mid=model_mid, model_long=model_long, similar_queries=similar_queries, created_at=datetime.now(), updated_at=datetime.now())
+        record = TermTrend(**data)
         db.session.add(record)
