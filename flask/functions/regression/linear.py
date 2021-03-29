@@ -12,7 +12,7 @@ from ..utils.generator import *
 from ..utils.dataset import *
 from ..utils.plick import *
 from ..query_filter import *
-from ...models.term_trend import TermTrend
+from ...models import *
 
 
 def handle_linear_regression(db):

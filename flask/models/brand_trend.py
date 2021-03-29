@@ -2,11 +2,11 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-class TermTrend(db.Model):
+class BrandTrend(db.Model):
     __table_args__ = {"schema":"plick"}
-    __tablename__ = 'term_trends'
-    query = db.Column(db.String(80), primary_key=True)
-    similar_queries = db.Column(db.ARRAY(db.String))
+    __tablename__ = 'brand_trends'
+    brand_id = db.Column(db.Integer, primary_key=True)
+    brand_name = db.Column(db.String(80))
     model_short = db.Column(db.ARRAY(db.Float))
     model_mid = db.Column(db.ARRAY(db.Float))
     model_long = db.Column(db.ARRAY(db.Float))
@@ -21,7 +21,7 @@ class TermTrend(db.Model):
     updated_at = db.Column(db.String(100))  
 
     def __repr__(self):
-        return '<Query %r>' % self.query 
+        return '<Brand %r>' % self.brand_name
 
     def create(self):
         db.create_all()

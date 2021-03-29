@@ -1,0 +1,162 @@
+import logging
+import redis
+import json
+from datetime import datetime
+
+from ...models.brand_trend import BrandTrend
+
+cache = redis.Redis(host='redis', port=6379)
+
+
+def get_brand_candidates(db):
+    CACHE_KEY = "_BRAND_CANDIDATES"
+
+    if(cache.get(CACHE_KEY)):
+        return json.loads(cache.get(CACHE_KEY))
+
+    res = db.session.execute("""
+        SELECT count(DISTINCT record.id) as count, record.brand_ids, STRING_AGG(DISTINCT brand.name, ', ')
+        FROM plick.search_record_processed as record
+        INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
+        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        GROUP BY record.brand_ids
+        HAVING count(record.id) > 5000
+        ORDER BY count(record.id) DESC
+    """)
+
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+    
+    cache.set(CACHE_KEY, json.dumps(res_arr), 300)
+    return res_arr
+
+def get_brand_dataset(db, brand): 
+    res = db.session.execute("""
+        SELECT *
+        FROM plick.brand_trends
+        WHERE brand like :brand
+    """, {
+        'brand': brand
+    })
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+    res_arr.reverse()
+    return res_arr[0]
+
+
+
+def generate_brand_datasets(db):
+    CACHE_KEY = "_BRANDS"
+    if(cache.get(CACHE_KEY)):
+        brands = json.loads(cache.get(CACHE_KEY))
+    else: 
+        brands = get_brand_candidates(db)
+        cache.set(CACHE_KEY, json.dumps(brands), 300)
+    [generate_brand_dataset(db, brand) for brand in brands] 
+    return "success"
+
+def generate_brand_dataset(db, brand):
+    data = dict()
+    data['start_date'] = "2021-01-01"
+    data['end_date'] = "2021-03-15"
+    data['brand_id'] = brand['id']
+    data['trunc_by'] = "minute"
+    time_series_min = get_brand_time_series_overlapping(db, **data)
+    data['trunc_by'] = "hour"
+    time_series_hour = get_brand_time_series_overlapping(db, **data)
+    data['trunc_by'] = "day"
+    time_series_day = get_brand_time_series_overlapping(db, **data)
+    data['trunc_by'] = "week"
+    time_series_week = get_brand_time_series_overlapping(db, **data)
+    data['trunc_by'] = "month"
+    time_series_month = get_brand_time_series_overlapping(db, **data)
+
+    data_store = {
+        'brand_id': brand['id'],
+        'brand_name': brand['name'],
+        'time_series_min': time_series_min,
+        'time_series_hour': time_series_hour,
+        'time_series_day': time_series_day,
+        'time_series_week': time_series_week,
+        'time_series_month': time_series_month,
+        'created_at': datetime.now(),
+        'updated_at': datetime.now(),
+    }
+
+    logging.debug("STORING BRAND {} TREND DATA".format(brand['name']))
+    save_to_db(db, data_store)
+    return "success"
+
+def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="2021-03-15", trunc_by="day", brand_id=10):
+    
+    CACHE_KEY = "_BRAND_TIME_SERIES_OVERLAPPING_{}_{}".format(brand_id, trunc_by)
+
+    if(cache.get(CACHE_KEY)):
+        logging.debug("Getting brand id {} {} trend from cache".format(brand_id, trunc_by))
+        return json.loads(cache.get(CACHE_KEY))
+
+    """
+    Gets time series when brand_ids array have atleast 1 overlapping id. 
+    Consider multiple options here like chosen brands should be
+    a subset(combined), or exactly the same.
+    """
+    res = db.session.execute("""
+        SELECT to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval, sum(coalesce(brands.amount,0)) as count from 
+        (SELECT count(distinct coalesce(user_id, 0)) as amount,
+        TIMESTAMP WITH TIME ZONE 'epoch' +
+        INTERVAL '1 second' * floor(extract('epoch' from created_at) / (60*15)) * (60*15) as time_interval
+        FROM plick.search_record_processed as record
+        INNER JOIN plick.brands as b on b.id = ANY(ARRAY[:brand_id])
+        WHERE record.brand_ids && ARRAY[:brand_id]
+        AND
+		ARRAY_LENGTH(record.brand_ids, 1) > 0
+		AND
+        created_at BETWEEN (:start_date)::date AND (:end_date)::date + interval '1 day'
+        GROUP BY floor(extract('epoch' from created_at) / (60*15))
+		) brands
+		RIGHT JOIN 
+        (
+        SELECT generate_series(date_trunc('minute',(:start_date)::date),
+        date_trunc('minute', (:end_date)::date + time '23:59:59'),'15 min'::interval) as time_interval
+        ) series
+        on series.time_interval = brands.time_interval
+		GROUP BY date_trunc(:trunc_by,series.time_interval)
+        ORDER BY
+       	time_interval DESC
+        """, {
+        'brand_id': brand_id,
+        'trunc_by': trunc_by,
+        'start_date': start_date,
+        'end_date': end_date,
+    })
+
+    res_arr = []
+    for r in res:
+        data = dict()
+        data['count'] = int(r['count'])
+        data['time_inteval'] = r['time_interval']
+        res_arr.append(data)
+    
+    cache.set(CACHE_KEY, json.dumps(res_arr), 300)
+    return res_arr
+
+def save_to_db(db, data):
+    BrandTrend().create()
+
+    record = db.session.query(BrandTrend).get(data['brand_id'])
+    if(record is not None):
+        record.time_series_min = data['time_series_min'],
+        record.time_series_hour = data['time_series_hour'],
+        record.time_series_day = data['time_series_day'],
+        record.time_series_week = data['time_series_week'],
+        record.time_series_month = data['time_series_month'],
+        # record.model_long = data['model_long']
+        # record.model_mid = data['model_mid']
+        # record.model_short = data['model_short']
+        record.updated_at = data['updated_at']
+    else:
+        record = BrandTrend(**data)
+        db.session.add(record)
+    db.session.commit()

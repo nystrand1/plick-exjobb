@@ -17,7 +17,13 @@ from joblib import Parallel
 from joblib import delayed
 
 from .models.search_record import SearchRecord
-from .models.term_trend import TermTrend
+from .models.brand_trend import *
+from .models.query_trend import *
+from .models.category_trend import *
+
+from .functions.trends.brand import *
+from .functions.trends.category import *
+
 from .functions.utils.sanitizer import *
 from .functions.query_filter import *
 from .functions.count_interval import *
@@ -76,13 +82,25 @@ def query_candidates():
     data['start_date'] = "2021-01-01"
     data['end_date'] = "2021-03-15"
     processed_queries = []
-    db.create_all()
-    [process_query(db, data, r, processed_queries) for r in res]
+    #[process_query(db, data, r, processed_queries) for r in res]
     db.session.commit()
     res_arr = []
     for row in res:
         res_arr.append(list(row))
     return Response(json.dumps(res_arr), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/category-candidates', methods=['GET'])
+@cross_origin()
+def category_candidates():
+    cache.flushall()
+    res = generate_category_datasets(db)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/brand-candidates', methods=['GET'])
+@cross_origin()
+def brand_candidates():
+    res = generate_brand_datasets(db)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-words', methods=['GET'])
 @cross_origin()

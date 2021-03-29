@@ -37,12 +37,6 @@ def get_query_candidates(db, seperate_brand_categories = False):
     
     return res_arr
 
-
-def use_strict(query):
-    splitted = query.split()
-    return len(splitted) > 1 and len(splitted[0]) > 2 and len(splitted[1]) > 2
-
-
 def get_similar_words(db, query, similarity_threshold = 0.59):
     CACHE_KEY = "_SIMQUERY:{}_SIMTHRESHOLD:{}".format(query, similarity_threshold)
     
