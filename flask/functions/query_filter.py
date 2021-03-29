@@ -43,13 +43,7 @@ def get_similar_words(db, query, similarity_threshold = 0.59):
     if (cache.get(CACHE_KEY)):
         logging.debug("GETTING SIMILAR WORDS FROM CACHE")
         return json.loads(cache.get(CACHE_KEY))
-
-    # method = "word_similarity"
-    # if(use_strict(query)):
-    #     similarity_threshold = 0.6
-    #     method = "strict_word_similarity"
-
-    # logging.debug("USING METHOD: {}".format(method))
+        
     res = db.session.execute("""
     SET work_mem='12MB';
     SET pg_trgm.similarity_threshold = :threshold;

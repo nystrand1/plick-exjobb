@@ -170,8 +170,6 @@ def count_interval_unique_similar(db, query="nike", trunc_by="hour", start_date=
         tmp['count'] = int(r['count'])
         tmp['trends'] = dict()
         tmp['time_interval'] = r['time_interval']
-        #r['count'] = int(r['count'])
-        #r['trends'] = dict()
         res_arr.append(tmp)
     res_arr.reverse()
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)

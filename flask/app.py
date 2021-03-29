@@ -23,6 +23,7 @@ from .models.category_trend import *
 
 from .functions.trends.brand import *
 from .functions.trends.category import *
+from .functions.trends.query import *
 
 from .functions.utils.sanitizer import *
 from .functions.query_filter import *
@@ -77,17 +78,8 @@ def auto_arima():
 @app.route('/query-candidates', methods=['GET'])
 @cross_origin()
 def query_candidates():
-    res = get_query_candidates(db)
-    data = dict()
-    data['start_date'] = "2021-01-01"
-    data['end_date'] = "2021-03-15"
-    processed_queries = []
-    #[process_query(db, data, r, processed_queries) for r in res]
-    db.session.commit()
-    res_arr = []
-    for row in res:
-        res_arr.append(list(row))
-    return Response(json.dumps(res_arr), status=HTTPStatus.OK, content_type="application/json")
+    res = generate_query_datasets(db)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/category-candidates', methods=['GET'])
 @cross_origin()

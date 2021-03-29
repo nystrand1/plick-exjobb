@@ -30,13 +30,13 @@ def get_category_candidates(db):
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
     return res_arr
 
-def get_category_dataset(db, category): 
+def get_category_dataset(db, category_ids): 
     res = db.session.execute("""
         SELECT *
         FROM plick.category_trends
-        WHERE category like :category
+        WHERE category like :category_ids
     """, {
-        'category': category
+        'category_ids': category_ids
     })
     res_arr = []
     for r in res:
