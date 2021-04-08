@@ -1,6 +1,6 @@
 import * as React from 'react'
 import s from './Test.module.scss'
-import { LineGraph, ToolSet, SimilarWords } from '~components'
+import { LineGraph, ToolSet } from '~components'
 import { useContext } from '~contexts'
 
 export const Test = () => {
@@ -23,7 +23,6 @@ export const Test = () => {
               zLabel={'Query'}
               title={query}
             />
-            {!!data?.similarWords?.length && <SimilarWords words={data?.similarWords} />}
           </>
         )}
         <ToolSet />

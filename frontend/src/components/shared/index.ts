@@ -1,2 +1,2 @@
 export * from './graphs'
-export * from './misc'
+export * from './TopListEntry'

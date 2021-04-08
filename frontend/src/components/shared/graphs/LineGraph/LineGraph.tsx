@@ -23,6 +23,19 @@ export interface LineGraphProps {
 export const LineGraph = (props: LineGraphProps) => {
   const { data, yLabel, title } = props
 
+  const colors = ["yellow", "blue", "green", "pink", "purple"]
+
+  const getTrendlines = () => {
+    if (data[0].trends == null) return;
+    let keys: string[] = [];
+    data.map(elem => {
+      if (elem.trends != null) {
+        keys.push(...Object.keys(elem.trends).filter(key => !keys.includes(key)));
+      }
+    })
+    return keys;
+  }
+
   return (
     <LineChart
       width={1400}
@@ -42,14 +55,17 @@ export const LineGraph = (props: LineGraphProps) => {
         fill="red"
         stroke="red"
       />
-      <Line
+      {getTrendlines()?.map((key, i) => {
+        return <Line
+        key={key}
         type="monotone"
-        name={'trend'}
-        dataKey={'trend'}
+        name={key}
+        dataKey={`trends.${key}`}
         style={{ fontSize: 14 }}
-        fill="green"
-        stroke="green"
+        fill={colors[i % colors.length]}
+        stroke={colors[i % colors.length]}
       />
+      })}
       <Tooltip
         labelStyle={{ color: 'black' }}
         content={<CustomTooltip fallBackName={title} />}
