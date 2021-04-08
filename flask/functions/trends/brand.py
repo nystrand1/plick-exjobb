@@ -10,18 +10,17 @@ cache = redis.Redis(host='redis', port=6379)
 
 def get_brand_candidates(db):
     CACHE_KEY = "_BRAND_CANDIDATES"
-
     if(cache.get(CACHE_KEY)):
         return json.loads(cache.get(CACHE_KEY))
 
     res = db.session.execute("""
-        SELECT count(DISTINCT record.id) as count, record.brand_ids, STRING_AGG(DISTINCT brand.name, ', ')
+        SELECT count(DISTINCT record.id) as count, brand.id, brand.name
         FROM plick.search_record_processed as record
         INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
         WHERE record.created_at > '2021-03-15'::date - interval '7 day'
-        GROUP BY record.brand_ids
-        HAVING count(record.id) > 5000
-        ORDER BY count(record.id) DESC
+        GROUP BY brand.id
+        HAVING count(DISTINCT record.id) > 1000
+        ORDER BY count(DISTINCT record.id) DESC
     """)
 
     res_arr = []
@@ -29,6 +28,54 @@ def get_brand_candidates(db):
         res_arr.append(dict(r))
     
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
+    return res_arr
+
+"""
+Returns the most popular categories within a brand
+"""
+def get_popular_categories_in_brands(db, brand_ids):
+    res = db.session.execute("""
+    SELECT count(DISTINCT record.id) as count, brand.name, brand.id, category.name
+        FROM plick.search_record_processed as record
+        INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
+        INNER JOIN plick.categories as category on category.id = ANY(record.category_ids)
+        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        AND :brand_ids && record.brand_ids
+        GROUP BY brand.name, brand.id, category.name
+        ORDER BY count(DISTINCT record.id) DESC
+        LIMIT 10
+    """, {
+        'brand_ids': brand_ids
+    })
+
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+
+    return res_arr
+
+"""
+Returns the most popular words searched for within a brand/s
+"""
+def get_popular_words_in_brands(db, brand_ids):
+    res = db.session.execute("""
+    SELECT count(DISTINCT record.id) as count, brand.name, query_processed as words
+        FROM plick.search_record_processed as record
+        INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
+        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        AND :brand_ids && record.brand_ids
+        AND query_processed is not null
+        GROUP BY brand.name, record.query_processed
+        HAVING count(DISTINCT record.id) > 150
+        ORDER BY count(DISTINCT record.id) DESC
+    """, {
+        'brand_ids': brand_ids
+    })
+
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+
     return res_arr
 
 def get_brand_dataset(db, brand): 
@@ -44,8 +91,6 @@ def get_brand_dataset(db, brand):
         res_arr.append(dict(r))
     res_arr.reverse()
     return res_arr[0]
-
-
 
 def generate_brand_datasets(db):
     CACHE_KEY = "_BRANDS"

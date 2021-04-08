@@ -19,8 +19,8 @@ def get_category_candidates(db):
         INNER JOIN plick.categories as cat on cat.id = ANY(record.category_ids)
         WHERE record.created_at > '2021-03-15'::date - interval '7 day'
         GROUP BY record.category_ids
-        HAVING count(record.id) > 5000
-        ORDER BY count(record.id) DESC
+        HAVING count(DISTINCT record.id) > 1000
+        ORDER BY count(DISTINCT record.id) DESC
     """)
 
     res_arr = []
@@ -28,6 +28,30 @@ def get_category_candidates(db):
         res_arr.append(dict(r))
     
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
+    return res_arr
+
+"""
+Returns the most popular words searched for within a category/s
+"""
+def get_popular_words_in_categorys(db, category_ids):
+    res = db.session.execute("""
+    SELECT count(DISTINCT record.id) as count, category.name, query_processed as words
+        FROM plick.search_record_processed as record
+        INNER JOIN plick.categories as category on category.id = ANY(record.category_ids)
+        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        AND :category_ids && record.category_ids
+        AND query_processed is not null
+        GROUP BY category.name, record.query_processed
+        HAVING count(DISTINCT record.id) > 150
+        ORDER BY count(DISTINCT record.id) DESC
+    """, {
+        'category_ids': category_ids
+    })
+
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+
     return res_arr
 
 def get_category_dataset(db, category_ids): 
