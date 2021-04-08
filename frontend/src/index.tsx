@@ -1,9 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { BrowserRouter as Router } from 'react-router-dom'
+import 'bootstrap/dist/css/bootstrap.css'
 import '~styles/global.scss'
 import { App } from '~components'
 import { Provider } from '~contexts'
-import { BrowserRouter as Router } from 'react-router-dom'
 
 const Root = (
   <React.StrictMode>

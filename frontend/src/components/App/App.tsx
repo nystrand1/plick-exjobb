@@ -6,7 +6,7 @@ export const App = () => {
   return (
     <div className={s.appWrapper}>
       <Route path={'/test'} component={Test} />
-      <Route path={'/'} render={() => <div>hello</div>} />
+      <Route path={'/'} render={() => <div className="col-6">hello</div>} />
     </div>
   )
 }
