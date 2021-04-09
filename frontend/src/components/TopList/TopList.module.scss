@@ -1,7 +1,7 @@
 @import '../../styles/all';
 
 .topListWrapper {
-  padding: $largeMargin;
+  padding: $largeMargin 0;
   background-color: white;
   border-radius: 20px;
   min-width: 340px;
@@ -11,6 +11,7 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  padding: 0 $largeMargin;
 }
 
 .title {
