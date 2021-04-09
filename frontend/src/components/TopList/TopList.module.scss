@@ -26,14 +26,6 @@
   margin: 0;
 }
 
-.dateSelect {
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  outline: none;
-  @extend .button;
-}
-
 .entries {
   padding-top: $mediumMargin;
 }

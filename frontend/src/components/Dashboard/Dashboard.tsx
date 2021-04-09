@@ -6,9 +6,9 @@ export const Dashboard = () => {
   return (
     <div className={`${s.dashboardWrapper}`}>
       <div className="row">
-        <TopList type="Queries" />
-        <TopList type="Brands" />
-        <TopList type="Categories" />
+        <TopList type="queries" />
+        <TopList type="brands" />
+        <TopList type="categories" />
       </div>
       <div className="row">
         <GraphTool />

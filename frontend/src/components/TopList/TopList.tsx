@@ -1,27 +1,26 @@
 import * as React from 'react'
 import s from './TopList.module.scss'
 import { months, getPastDate } from '~utils'
-import { TopListEntry } from '~components'
+import { TopListEntry, DropDown } from '~components'
 import Shoes from '~static/images/shoes.jpeg'
 
 interface TopListProps {
-  type: 'Queries' | 'Brands' | 'Categories'
+  type: 'queries' | 'brands' | 'categories'
 }
 
 export const TopList = ({ type }: TopListProps) => {
   const [time, setTime] = React.useState('1 vecka')
+  let title = ''
 
-  const TimeSelect = () => (
-    <select
-      className={s.dateSelect}
-      onChange={(e) => setTime(e.target.value)}
-      value={time}
-    >
-      <option>1 vecka</option>
-      <option>2 veckor</option>
-      <option>1 månad</option>
-    </select>
-  )
+  if (type === 'queries') {
+    title = 'Söktermer'
+  }
+  if (type === 'brands') {
+    title = 'Märken'
+  }
+  if (type === 'categories') {
+    title = 'Kategorier'
+  }
 
   const getTimeInterval = () => {
     const today = new Date()
@@ -62,13 +61,15 @@ export const TopList = ({ type }: TopListProps) => {
     { query: 'Mössor', metric: 1334, image: Shoes },
   ]
 
+  const options = ['1 vecka', '2 veckor', '1 månad']
+
   return (
     <div className="col-lg-6 col-xl-4">
       <div className={`${s.topListWrapper}`}>
         <div className={s.header}>
-          <h2 className={s.title}>{type}</h2>
+          <h2 className={s.title}>{title}</h2>
           <p className={s.date}>{getTimeInterval()}</p>
-          <TimeSelect />
+          <DropDown options={options} value={time} onChange={setTime} />
         </div>
         <div>
           <div className={s.entries}>
