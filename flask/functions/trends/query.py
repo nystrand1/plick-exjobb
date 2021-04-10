@@ -32,6 +32,7 @@ def get_query_candidates(db, seperate_brand_categories = False):
         GROUP BY query_processed
         HAVING count(query_processed) > 300
         ORDER BY amount DESC
+        LIMIT 50
         """)
 
     res_arr = []
@@ -39,7 +40,6 @@ def get_query_candidates(db, seperate_brand_categories = False):
     for r in res:
         res_arr.append(dict(r))
     
-    logging.debug(res_arr)
     return res_arr
 
 def get_similar_words(db, query, similarity_threshold = 0.59):
@@ -97,12 +97,12 @@ def generate_query_datasets(db):
     return "success"
 
 def generate_query_dataset(db, data, r, processed_queries):
-    logging.debug(processed_queries)
     data['query'] = r['query_processed']
     if data['query'] in processed_queries:
         logging.debug("WORD ALDREADY PROCESSED: {}".format(data['query']))
         return
     data['similar_queries'] = get_similar_words(db, data['query'])
+    generate_query_time_series(db, data['query'], data['similar_queries'])
     logging.debug("SIMILAR WORDS: {}".format(data['similar_queries']))
     data['trunc_by'] = "minute"
     time_series_min = get_query_time_series(db, **data)
@@ -144,6 +144,26 @@ def generate_query_dataset(db, data, r, processed_queries):
     save_to_db(db, data_store)
     db.session.commit()
 
+def generate_query_time_series(db, query="nike", similar_queries=[]):
+    formatted_query = query.replace(" ", "_")
+    formatted_query = formatted_query.replace("&", "_")
+    formatted_query = formatted_query.replace("-", "_")
+    res = db.session.execute("""
+        CREATE MATERIALIZED VIEW IF NOT EXISTS plick.query_{} AS
+        SELECT :query, count(distinct coalesce(user_id, 0)) as amount,
+        TIMESTAMP WITH TIME ZONE 'epoch' +
+        INTERVAL '1 second' * floor(extract('epoch' from created_at) / (60*15)) * (60*15) as time_interval
+        FROM plick.search_record_processed 
+        WHERE query_processed LIKE ANY(:similar_queries)
+        GROUP BY floor(extract('epoch' from created_at) / (60*15));
+
+        CREATE UNIQUE INDEX IF NOT EXISTS time_series_interval_query_{}
+        ON plick.query_{} (time_interval);
+    """.format(formatted_query, formatted_query, formatted_query), {
+        'query': query,
+        'similar_queries': similar_queries
+    })
+
 def get_query_dataset(db, query): 
     res = db.session.execute("""
         SELECT *
@@ -164,19 +184,15 @@ def get_query_time_series(db, query="nike", trunc_by="hour", start_date="2021-01
     if (cache.get(CACHE_KEY)):
         logging.debug("GETTING INTERVAL FROM CACHE")
         return json.loads(cache.get(CACHE_KEY))
-
+    formatted_query = query.replace(" ", "_")
+    formatted_query = formatted_query.replace("&", "_")
+    formatted_query = formatted_query.replace("-", "_")
     res = db.session.execute("""
         SELECT :query as query, to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval, sum(coalesce(count.amount,0)) as count from 
-        (SELECT query_processed, count(distinct coalesce(user_id, 0)) as amount,
-        TIMESTAMP WITH TIME ZONE 'epoch' +
-        INTERVAL '1 second' * floor(extract('epoch' from created_at) / (60*15)) * (60*15) as time_interval
-        FROM plick.search_record_processed 
-        WHERE query_processed LIKE ANY(:similar_queries)
-        AND
-        created_at BETWEEN (:start_date)::date AND (:end_date)::date + interval '1 day'
-        GROUP BY floor(extract('epoch' from created_at) / (60*15)), query_processed
+        (SELECT *
+        FROM plick.query_{}
 		) count
-		RIGHT JOIN 
+		RIGHT JOIN
         (
         SELECT generate_series(date_trunc('minute',(:start_date)::date),
         date_trunc('minute', (:end_date)::date + time '23:59:59'),'15 min'::interval) as time_interval
@@ -184,8 +200,8 @@ def get_query_time_series(db, query="nike", trunc_by="hour", start_date="2021-01
         on series.time_interval = count.time_interval
 		GROUP BY date_trunc(:trunc_by,series.time_interval)
         ORDER BY
-       	time_interval DESC
-        """, {
+       	time_interval ASC
+        """.format(formatted_query), {
         'query': query,
         'trunc_by': trunc_by,
         'start_date': start_date,
@@ -194,12 +210,12 @@ def get_query_time_series(db, query="nike", trunc_by="hour", start_date="2021-01
     })
     res_arr = []
     for r in res:
-        tmp = dict()
-        tmp['count'] = int(r['count'])
-        tmp['trends'] = dict()
-        tmp['time_interval'] = r['time_interval']
-        res_arr.append(tmp)
-    res_arr.reverse()
+        data = dict()
+        data['count'] = int(r['count'])
+        data['trends'] = dict()
+        data['time_interval'] = r['time_interval']
+        res_arr.append(data)
+
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
     return res_arr
 

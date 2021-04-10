@@ -3,6 +3,8 @@ import redis
 import json
 from datetime import datetime
 
+from ..utils.dataset import split_dataset
+from ..regression.linear import get_linear_model
 from ...models.brand_trend import BrandTrend
 
 cache = redis.Redis(host='redis', port=6379)
@@ -21,6 +23,7 @@ def get_brand_candidates(db):
         GROUP BY brand.id
         HAVING count(DISTINCT record.id) > 1000
         ORDER BY count(DISTINCT record.id) DESC
+        LIMIT 50
     """)
 
     res_arr = []
@@ -59,13 +62,13 @@ Returns the most popular words searched for within a brand/s
 """
 def get_popular_words_in_brands(db, brand_ids):
     res = db.session.execute("""
-    SELECT count(DISTINCT record.id) as count, brand.name, query_processed as words
+    SELECT count(DISTINCT record.id) as count, brand.name, query_processed as words, query
         FROM plick.search_record_processed as record
         INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
         WHERE record.created_at > '2021-03-15'::date - interval '7 day'
         AND :brand_ids && record.brand_ids
         AND query_processed is not null
-        GROUP BY brand.name, record.query_processed
+        GROUP BY brand.name, record.query_processed, query
         HAVING count(DISTINCT record.id) > 150
         ORDER BY count(DISTINCT record.id) DESC
     """, {
@@ -108,6 +111,7 @@ def generate_brand_dataset(db, brand):
     data['end_date'] = "2021-03-15"
     data['brand_id'] = brand['id']
     data['trunc_by'] = "minute"
+    generate_brand_time_series(db, brand['id'])
     time_series_min = get_brand_time_series_overlapping(db, **data)
     data['trunc_by'] = "hour"
     time_series_hour = get_brand_time_series_overlapping(db, **data)
@@ -117,7 +121,13 @@ def generate_brand_dataset(db, brand):
     time_series_week = get_brand_time_series_overlapping(db, **data)
     data['trunc_by'] = "month"
     time_series_month = get_brand_time_series_overlapping(db, **data)
-
+    datasets = split_dataset(time_series_day)
+    linear_model_long = get_linear_model(datasets['long'])
+    linear_model_mid = get_linear_model(datasets['mid'])
+    linear_model_short = get_linear_model(datasets['short'])
+    logging.debug("LONG MODEL: {}".format(linear_model_long))
+    logging.debug("MID MODEL: {}".format(linear_model_mid))
+    logging.debug("SHORT MODEL: {}".format(linear_model_short))
     data_store = {
         'brand_id': brand['id'],
         'brand_name': brand['name'],
@@ -126,6 +136,9 @@ def generate_brand_dataset(db, brand):
         'time_series_day': time_series_day,
         'time_series_week': time_series_week,
         'time_series_month': time_series_month,
+        'model_short': linear_model_short,
+        'model_mid': linear_model_mid,
+        'model_long': linear_model_long,
         'created_at': datetime.now(),
         'updated_at': datetime.now(),
     }
@@ -133,6 +146,25 @@ def generate_brand_dataset(db, brand):
     logging.debug("STORING BRAND {} TREND DATA".format(brand['name']))
     save_to_db(db, data_store)
     return "success"
+
+def generate_brand_time_series(db, brand_id=11):
+    res = db.session.execute("""
+        CREATE MATERIALIZED VIEW IF NOT EXISTS plick.brand_{} AS
+        SELECT count(distinct coalesce(user_id, 0)) as amount,
+        TIMESTAMP WITH TIME ZONE 'epoch' +
+        INTERVAL '1 second' * floor(extract('epoch' from record.created_at) / (60*15)) * (60*15) as time_interval
+        FROM plick.search_record_processed as record
+		INNER JOIN plick.categories as cat on cat.id = ANY(record.brand_ids)
+        WHERE record.brand_ids && ARRAY[:brand_id]
+		AND
+        record.created_at BETWEEN '2021-01-01'::date AND '2021-03-15'::date + interval '1 day'
+        GROUP BY floor(extract('epoch' from record.created_at) / (60*15));
+
+        CREATE UNIQUE INDEX IF NOT EXISTS time_series_interval_brand_{}
+        ON plick.brand_{} (time_interval);
+    """.format(brand_id, brand_id, brand_id), {
+        'brand_id': brand_id
+    })
 
 def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="2021-03-15", trunc_by="day", brand_id=10):
     
@@ -149,17 +181,8 @@ def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="202
     """
     res = db.session.execute("""
         SELECT to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval, sum(coalesce(brands.amount,0)) as count from 
-        (SELECT count(distinct coalesce(user_id, 0)) as amount,
-        TIMESTAMP WITH TIME ZONE 'epoch' +
-        INTERVAL '1 second' * floor(extract('epoch' from created_at) / (60*15)) * (60*15) as time_interval
-        FROM plick.search_record_processed as record
-        INNER JOIN plick.brands as b on b.id = ANY(ARRAY[:brand_id])
-        WHERE record.brand_ids && ARRAY[:brand_id]
-        AND
-		ARRAY_LENGTH(record.brand_ids, 1) > 0
-		AND
-        created_at BETWEEN (:start_date)::date AND (:end_date)::date + interval '1 day'
-        GROUP BY floor(extract('epoch' from created_at) / (60*15))
+        (SELECT *
+        FROM plick.brand_{}
 		) brands
 		RIGHT JOIN 
         (
@@ -169,8 +192,8 @@ def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="202
         on series.time_interval = brands.time_interval
 		GROUP BY date_trunc(:trunc_by,series.time_interval)
         ORDER BY
-       	time_interval DESC
-        """, {
+       	time_interval ASC
+        """.format(brand_id), {
         'brand_id': brand_id,
         'trunc_by': trunc_by,
         'start_date': start_date,
@@ -181,7 +204,7 @@ def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="202
     for r in res:
         data = dict()
         data['count'] = int(r['count'])
-        data['time_inteval'] = r['time_interval']
+        data['time_interval'] = r['time_interval']
         res_arr.append(data)
     
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
@@ -197,9 +220,9 @@ def save_to_db(db, data):
         record.time_series_day = data['time_series_day'],
         record.time_series_week = data['time_series_week'],
         record.time_series_month = data['time_series_month'],
-        # record.model_long = data['model_long']
-        # record.model_mid = data['model_mid']
-        # record.model_short = data['model_short']
+        record.model_long = data['model_long']
+        record.model_mid = data['model_mid']
+        record.model_short = data['model_short']
         record.updated_at = data['updated_at']
     else:
         record = BrandTrend(**data)

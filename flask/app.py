@@ -4,6 +4,7 @@ import json
 import datetime
 import logging
 import sys
+import pickle
 from decouple import config
 from flask import Flask, request, Response
 from flask_sqlalchemy import SQLAlchemy as sa
@@ -84,7 +85,6 @@ def query_candidates():
 @app.route('/category-candidates', methods=['GET'])
 @cross_origin()
 def category_candidates():
-    cache.flushall()
     res = generate_category_datasets(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
@@ -93,6 +93,29 @@ def category_candidates():
 def brand_candidates():
     res = generate_brand_datasets(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/generate-trend-data', methods=['GET'])
+@cross_origin()
+def generate_trend_data():
+    logging.debug("GENERATING QUERY DATASETS")
+    res = generate_query_datasets(db)
+    logging.debug("GENERATING CATEGORY DATASETS")
+    res = generate_category_datasets(db)
+    logging.debug("GENERATING BRAND DATASETS")
+    res = generate_brand_datasets(db)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/sarima-test', methods=['GET'])
+@cross_origin()
+def sarima_test():
+    dataset = get_category_dataset(db, 11)
+    logging.debug(dataset['time_series_hour'])
+    dataset = dataset['time_series_hour']
+    model = get_sarima_model(dataset)
+    store_sarima_model(db, pickle.dumps(model))
+    logging.debug(model.summary())
+    return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/trending-words', methods=['GET'])
 @cross_origin()
@@ -103,7 +126,7 @@ def trending_words():
 @app.route('/trending-categories', methods=['GET'])
 @cross_origin()
 def trending_categories():
-    res = get_trending_categories(db)
+    res = get_popular_words_in_categorys(db, [11])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-brands', methods=['GET'])
@@ -111,7 +134,6 @@ def trending_categories():
 def trending_brands():
     res = get_trending_brands(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
-
 
 @app.route('/trending-ads', methods=['GET'])
 @cross_origin()
