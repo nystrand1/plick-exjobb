@@ -1,0 +1,28 @@
+@import '../../../styles/all';
+
+.largeButton {
+  border: 3px solid $lightText;
+  color: $lightText;
+  background-color: transparent;
+  width: 130px;
+  height: 38px;
+  font-weight: bold;
+  border-radius: 18px;
+  transition: border 0.3s, color 0.3s, background-color 0.3s;
+
+  &:hover {
+    color: $lightTextHover;
+    border: 3px solid $lightTextHover;
+
+    &.active {
+      background-color: $darkTextHover;
+      border: 3px solid $darkTextHover;
+    }
+  }
+
+  &.active {
+    color: white;
+    background-color: $darkText;
+    border: 3px solid $darkText;
+  }
+}

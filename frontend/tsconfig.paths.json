@@ -8,7 +8,11 @@
       "~components/*": ["./components/*"],
       "~styles/*": ["./styles/*"],
       "~contexts": ["./contexts"],
-      "~contexts/*": ["./contexts/*"]
+      "~contexts/*": ["./contexts/*"],
+      "~static": ["./static"],
+      "~static/*": ["./static/*"],
+      "~utils": ["./utils"],
+      "~utils/*": ["./utils/*"]
     }
   }
 }

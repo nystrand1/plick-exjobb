@@ -1,0 +1,64 @@
+@import '../../../styles/all';
+
+.entryWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin: $smallMargin 0;
+  padding: 0 $largeMargin;
+  width: 100%;
+  border: none;
+  background-color: transparent;
+
+  &:hover {
+    background-color: $backgroundGray;
+  }
+}
+
+.index {
+  font-size: 20px;
+  color: $lightText;
+  font-weight: bold;
+  margin: 3px 0;
+}
+
+.text {
+  display: flex;
+
+  .queryWrapper {
+    margin-left: $smallMargin;
+    text-align: left;
+
+    .query {
+      font-size: 20px;
+      display: inline-block;
+    }
+    .metric {
+      font-size: 14px;
+      font-weight: bold;
+      color: $lightText;
+      display: inline-block;
+      margin-left: $mediumMargin;
+    }
+    .words {
+      font-size: 14px;
+      padding-right: $mediumMargin;
+    }
+  }
+}
+
+.imageWrapper {
+  min-width: 115px;
+
+  .image {
+    object-fit: cover;
+    width: 86px;
+    height: 86px;
+    border-radius: $borderRadiusSmall;
+  }
+
+  .showMore {
+    transform: translate(50%, 0);
+  }
+}

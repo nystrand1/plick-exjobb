@@ -1,0 +1,20 @@
+@import '../../../styles/all';
+
+.title {
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.datePicker {
+  border: none;
+  background-color: transparent;
+  font-weight: bold;
+  padding: 0;
+  margin: 0;
+  @extend .textButton;
+}
+
+.downArrow {
+  margin-left: 8px;
+  margin-bottom: 3px;
+}

@@ -1,0 +1,28 @@
+@import '../../../styles/all';
+
+select {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+}
+select::-ms-expand {
+  display: none;
+}
+
+.dateSelect {
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  outline: none;
+  @extend .textButton;
+}
+
+.title {
+  font-weight: bold;
+  font-size: 12px;
+  color: $darkText;
+}
+
+.downArrow {
+  margin-left: 8px;
+  margin-bottom: 3px;
+}

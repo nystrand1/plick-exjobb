@@ -1,12 +1,15 @@
 import s from './App.module.scss'
 import { Route } from 'react-router-dom'
-import { Test } from '~components'
+import { Test, Dashboard, Sidebar } from '~components'
 
 export const App = () => {
   return (
     <div className={s.appWrapper}>
-      <Route path={'/test'} component={Test} />
-      <Route path={'/'} render={() => <div className="col-6">hello</div>} />
+      <Sidebar />
+      <div className={s.contentWrapper}>
+        <Route path={'/test'} component={Test} />
+        <Route path={'/'} component={Dashboard} />
+      </div>
     </div>
   )
 }

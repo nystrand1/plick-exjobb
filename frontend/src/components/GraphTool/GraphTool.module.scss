@@ -1,0 +1,35 @@
+@import '../../styles/all';
+
+.graphToolWrapper {
+  margin-top: $largeMargin;
+  padding: $largeMargin;
+  background-color: white;
+  border-radius: $borderRadiusLarge;
+}
+
+.topSection {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.typeSelection {
+  width: 30%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.dateSelection {
+  display: flex;
+  width: 30%;
+  justify-content: space-between;
+}
+
+.graphLines,
+.lineGraph {
+  padding-top: $largeMargin;
+}
+
+.lineGraph {
+  min-height: 600px;
+}
