@@ -1,6 +1,6 @@
 import time
 import redis
-import json
+import simplejson as json
 import datetime
 import logging
 import sys
@@ -27,7 +27,6 @@ from .functions.trends.category import *
 from .functions.trends.query import *
 
 from .functions.utils.sanitizer import *
-from .functions.query_filter import *
 from .functions.count_interval import *
 from .functions.regression.linear import *
 from .functions.regression.arma import handle_arma_regression
@@ -108,7 +107,7 @@ def generate_trend_data():
 @app.route('/sarima-test', methods=['GET'])
 @cross_origin()
 def sarima_test():
-    dataset = get_category_dataset(db, 11)
+    dataset = get_category_dataset(db, 12)
     logging.debug(dataset['time_series_hour'])
     dataset = dataset['time_series_hour']
     model = get_sarima_model(dataset)
@@ -126,7 +125,7 @@ def trending_words():
 @app.route('/trending-categories', methods=['GET'])
 @cross_origin()
 def trending_categories():
-    res = get_popular_words_in_categorys(db, [11])
+    res = get_trending_categories(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-brands', methods=['GET'])

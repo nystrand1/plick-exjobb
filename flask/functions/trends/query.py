@@ -81,6 +81,42 @@ def get_similar_words(db, query, similarity_threshold = 0.59):
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
     return res_arr
 
+def get_trending_words(db, limit=5, k_threshold=0):
+    res = db.session.execute("""
+    SELECT query, similar_queries, model_short, model_long,
+    model_short[1] as k_short,
+    model_long[1] as k_long,
+    ABS(model_short[1]/model_long[1])*100 as k_val_diff_percent,
+    model_short[1]-model_long[1] as k_val_diff,
+    (plick.weekly_count_diff(time_series_day))[1] - (plick.weekly_count_diff(time_series_day))[2] as weekly_diff,
+    (plick.weekly_count_diff(time_series_day))[3] * 100 - 100 as weekly_diff_percentage,
+    (plick.monthly_count_diff(time_series_day))[1] - (plick.monthly_count_diff(time_series_day))[2] as monthly_diff,
+    (plick.monthly_count_diff(time_series_day))[3] * 100 - 100 as monthly_diff_percentage
+    FROM plick.query_trends
+    WHERE model_short[1] + :threshold > model_long[1]
+    AND model_short[1] > 1
+    ORDER BY model_short[1] DESC
+    LIMIT :limit
+    """, {
+        'limit': limit,
+        'threshold': k_threshold
+    })
+
+    res_arr = []
+
+    for r in res:
+        tmp = dict()
+        tmp['query'] = r['query']
+        tmp['similar_queries'] = r['similar_queries']
+        tmp['model_short'] = r['model_short']
+        tmp['model_long'] = r['model_long']
+        tmp['weekly_diff'] = int(r['weekly_diff'])
+        tmp['weekly_diff_percentage'] = float(r['weekly_diff_percentage'])
+        tmp['monthly_diff'] = int(r['monthly_diff'])
+        tmp['monthly_diff_percentage'] = float(r['monthly_diff_percentage'])
+        res_arr.append(tmp)
+    return res_arr 
+
 def generate_query_datasets(db):
     CACHE_KEY = "_QUERY_CANDIDATES"
     if(cache.get(CACHE_KEY)):

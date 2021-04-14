@@ -59,6 +59,42 @@ def get_popular_words_in_categorys(db, category_ids):
 
     return res_arr
 
+def get_trending_categories(db, limit=5, k_threshold=0.5):
+    res = db.session.execute("""
+    SELECT category_name, category_id, model_short, model_long,
+    model_short[1] as k_short,
+    model_long[1] as k_long,
+    ABS(model_short[1]/model_long[1])*100 as k_val_diff_percent,
+    model_short[1]-model_long[1] as k_val_diff,
+    (plick.weekly_count_diff(time_series_day))[1] - (plick.weekly_count_diff(time_series_day))[2] as weekly_diff,
+    (plick.weekly_count_diff(time_series_day))[3] * 100 - 100 as weekly_diff_percentage,
+    (plick.monthly_count_diff(time_series_day))[1] - (plick.monthly_count_diff(time_series_day))[2] as monthly_diff,
+    (plick.monthly_count_diff(time_series_day))[3] * 100 - 100 as monthly_diff_percentage
+    FROM plick.category_trends
+    WHERE model_short[1] + :threshold > model_long[1]
+    AND model_short[1] > 1
+    ORDER BY model_short[1] DESC
+    LIMIT :limit
+    """, {
+        'limit': limit,
+        'threshold': k_threshold
+    })
+
+    res_arr = []
+
+    for r in res:
+        data = dict()
+        data['category_id'] = r['category_id']
+        data['category_name'] = r['category_name']
+        data['model_long'] = r['model_long']
+        data['model_short'] = r['model_short']
+        data['weekly_diff'] = int(r['weekly_diff'])
+        data['weekly_diff_percentage'] = float(r['weekly_diff_percentage'])
+        data['monthly_diff'] = int(r['monthly_diff'])
+        data['monthly_diff_percentage'] = float(r['monthly_diff_percentage'])
+        res_arr.append(data)
+    return res_arr 
+
 def get_category_dataset(db, category_id): 
     res = db.session.execute("""
         SELECT *
@@ -210,7 +246,7 @@ def save_to_db(db, data):
     db.session.commit()
 
 def store_sarima_model(db, serialized_model):
-    record = db.session.query(CategoryTrend).filter_by(category_id=11).first()
+    record = db.session.query(CategoryTrend).filter_by(category_id=12).first()
     if(record is not None):
         record.model_sarima = serialized_model
     else:

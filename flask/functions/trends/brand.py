@@ -81,6 +81,45 @@ def get_popular_words_in_brands(db, brand_ids):
 
     return res_arr
 
+def get_trending_brands(db, limit=5, k_threshold=0.5):
+    res = db.session.execute("""
+    SELECT brand_name, 
+    brand_id,
+    model_long,
+    model_short,
+    model_short[1] as k_short,
+    model_long[1] as k_long,
+    ABS(model_short[1]/model_long[1])*100 as k_val_diff_percent,
+    model_short[1]-model_long[1] as k_val_diff,
+    (plick.weekly_count_diff(time_series_day))[1] - (plick.weekly_count_diff(time_series_day))[2] as weekly_diff,
+    (plick.weekly_count_diff(time_series_day))[3] * 100 - 100 as weekly_diff_percentage,
+    (plick.monthly_count_diff(time_series_day))[1] - (plick.monthly_count_diff(time_series_day))[2] as monthly_diff,
+    (plick.monthly_count_diff(time_series_day))[3] * 100 - 100 as monthly_diff_percentage
+    FROM plick.brand_trends
+    WHERE model_short[1] + :threshold > model_long[1]
+    AND model_short[1] > 1
+    ORDER BY model_short[1] DESC
+    LIMIT :limit
+    """, {
+        'limit': limit,
+        'threshold': k_threshold
+    })
+
+    res_arr = []
+
+    for r in res:
+        data = dict()
+        data['brand_id'] = r['brand_id']
+        data['brand_name'] = r['brand_name']
+        data['model_long'] = r['model_long']
+        data['model_short'] = r['model_short']
+        data['weekly_diff'] = int(r['weekly_diff'])
+        data['weekly_diff_percentage'] = float(r['weekly_diff_percentage'])
+        data['monthly_diff'] = int(r['monthly_diff'])
+        data['monthly_diff_percentage'] = float(r['monthly_diff_percentage'])
+        res_arr.append(data)
+    return res_arr 
+
 def get_brand_dataset(db, brand): 
     res = db.session.execute("""
         SELECT *
