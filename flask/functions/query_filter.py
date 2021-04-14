@@ -74,27 +74,4 @@ def get_similar_words(db, query, similarity_threshold = 0.59):
         res_arr.append(r['query'])
 
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
-    return res_arr
-
-
-def get_trending_words(db, limit=5, k_threshold=0):
-    res = db.session.execute("""
-    SELECT query, similar_queries, model_short, model_long
-    FROM plick.query_trends
-    WHERE model_short[1] + :threshold > model_long[1]
-    AND model_short[1] > 1
-    ORDER BY model_short[1] DESC
-    LIMIT :limit
-    """, {
-        'limit': limit,
-        'threshold': k_threshold
-    })
-
-    res_arr = []
-
-    for r in res:
-        tmp = dict()
-        tmp['query'] = r['query']
-        tmp['similar_queries'] = r['similar_queries']
-        res_arr.append(tmp)
-    return res_arr  
+    return res_arr 

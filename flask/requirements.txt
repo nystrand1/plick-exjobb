@@ -15,3 +15,5 @@ joblib
 pmdarima
 flask-caching
 requests
+simplejson
+darts
