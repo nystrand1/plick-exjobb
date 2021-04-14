@@ -20,8 +20,8 @@ export const DropDown = ({ options, onChange, value, title }: DropDownProps) => 
             onChange={(e) => onChange(e.target.value)}
             value={value}
           >
-            {options?.map((o) => (
-              <option>{o}</option>
+            {options?.map((o, i) => (
+              <option key={i}>{o}</option>
             ))}
           </select>
           <DownArrow className={s.downArrow} />

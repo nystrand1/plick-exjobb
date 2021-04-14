@@ -1,6 +1,6 @@
 import * as React from 'react'
 import s from './Test.module.scss'
-import { LineGraph, ToolSet } from '~components'
+import { LineGraphOld, ToolSet } from '~components'
 import { useContext } from '~contexts'
 
 export const Test = () => {
@@ -16,7 +16,7 @@ export const Test = () => {
           <p>Loading...</p>
         ) : (
           <>
-            <LineGraph
+            <LineGraphOld
               data={graphData}
               xLabel={'Time'}
               yLabel={'Count'}

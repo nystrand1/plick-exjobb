@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts'
-import { CustomTooltip } from '~components'
+import { CustomTooltip } from '../CustomToolTip'
 
 export interface LineGraphProps {
   title: string
@@ -20,20 +20,20 @@ export interface LineGraphProps {
   futureData?: any
 }
 
-export const LineGraph = (props: LineGraphProps) => {
+export const LineGraphOld = (props: LineGraphProps) => {
   const { data, yLabel, title } = props
 
-  const colors = ["yellow", "blue", "green", "pink", "purple"]
+  const colors = ['yellow', 'blue', 'green', 'pink', 'purple']
 
   const getTrendlines = () => {
-    if (data[0].trends == null) return;
-    let keys: string[] = [];
-    data.map(elem => {
+    if (data[0].trends == null) return
+    let keys: string[] = []
+    data.forEach((elem) => {
       if (elem.trends != null) {
-        keys.push(...Object.keys(elem.trends).filter(key => !keys.includes(key)));
+        keys.push(...Object.keys(elem.trends).filter((key) => !keys.includes(key)))
       }
     })
-    return keys;
+    return keys
   }
 
   return (
@@ -56,15 +56,17 @@ export const LineGraph = (props: LineGraphProps) => {
         stroke="red"
       />
       {getTrendlines()?.map((key, i) => {
-        return <Line
-        key={key}
-        type="monotone"
-        name={key}
-        dataKey={`trends.${key}`}
-        style={{ fontSize: 14 }}
-        fill={colors[i % colors.length]}
-        stroke={colors[i % colors.length]}
-      />
+        return (
+          <Line
+            key={key}
+            type="monotone"
+            name={key}
+            dataKey={`trends.${key}`}
+            style={{ fontSize: 14 }}
+            fill={colors[i % colors.length]}
+            stroke={colors[i % colors.length]}
+          />
+        )
       })}
       <Tooltip
         labelStyle={{ color: 'black' }}

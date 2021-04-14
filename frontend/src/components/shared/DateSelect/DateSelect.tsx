@@ -11,8 +11,8 @@ interface DateSelectProps {
 
 export const DateSelect = ({ title, startDate, onChange }: DateSelectProps) => {
   const CustomInput = React.forwardRef(
-    ({ value, onClick, ref }: React.ComponentPropsWithRef<'button'>) => (
-      <button className={s.datePicker} onClick={onClick} ref={ref}>
+    ({ value, onClick }: React.ComponentPropsWithRef<'button'>, _) => (
+      <button className={s.datePicker} onClick={onClick}>
         {value}
         <DownArrow className={s.downArrow} />
       </button>

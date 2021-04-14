@@ -1,12 +1,20 @@
 import * as React from 'react'
 import s from './GraphTool.module.scss'
-import { LargeButton, DateSelect } from '~components'
-import { queries } from '@testing-library/dom'
+import { LargeButton, DateSelect, DropDown, GraphLines, LineGraph } from '~components'
 import { useContext } from '~contexts'
-import DatePicker from 'react-datepicker'
-import { DropDown } from '~components/shared'
 
 export const GraphTool = () => {
+  const [graphHeight, setHeight] = React.useState(0)
+  const [graphWidth, setWidth] = React.useState(0)
+  const graphRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (graphRef.current) {
+      setHeight(graphRef.current?.getBoundingClientRect().height)
+      setWidth(graphRef.current?.getBoundingClientRect().width)
+    }
+  }, [])
+
   const {
     startDate,
     endDate,
@@ -60,6 +68,14 @@ export const GraphTool = () => {
               onChange={setResolution}
               value={resolution}
             />
+          </div>
+        </div>
+        <div className="row">
+          <div className={`${s.graphLines} col-4`}>
+            <GraphLines />
+          </div>
+          <div className={`${s.lineGraph} col-8`} ref={graphRef}>
+            <LineGraph height={graphHeight} width={graphWidth} />
           </div>
         </div>
       </div>

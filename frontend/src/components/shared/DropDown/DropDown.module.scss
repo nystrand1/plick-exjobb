@@ -13,7 +13,7 @@ select::-ms-expand {
   cursor: pointer;
   font-weight: bold;
   outline: none;
-  @extend .button;
+  @extend .textButton;
 }
 
 .title {

@@ -24,3 +24,12 @@
   width: 30%;
   justify-content: space-between;
 }
+
+.graphLines,
+.lineGraph {
+  padding-top: $largeMargin;
+}
+
+.lineGraph {
+  min-height: 600px;
+}

@@ -1,0 +1,85 @@
+@import '../../styles/all';
+
+.graphLinesWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.search {
+  position: relative;
+
+  .icon {
+    height: 100%;
+    left: 12px;
+    position: absolute;
+  }
+
+  input {
+    color: $darkText;
+    border: 2px solid $lightText;
+    border-radius: $borderRadiusSmall;
+    padding: $smallMargin $smallMargin $smallMargin 40px;
+  }
+}
+
+.linesTitle {
+  margin-top: $largeMargin;
+  text-transform: uppercase;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  margin-bottom: 16px;
+  padding: 0 52px;
+  text-align: center;
+
+  .metricsTitle {
+    width: 50%;
+    display: flex;
+    justify-content: space-around;
+  }
+}
+
+.line {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 16px;
+  box-shadow: rgba(0, 0, 0, 0.226) 0px 0px 15px;
+  border-radius: $borderRadiusSmall;
+  border-width: 3px;
+  border-style: solid;
+  border-color: white;
+  user-select: none;
+}
+
+.content {
+  padding: $mediumMargin;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.button {
+  background-color: transparent;
+  border: none;
+  padding: $mediumMargin;
+  z-index: 1;
+}
+
+.values {
+  width: 50%;
+  display: flex;
+  justify-content: space-around;
+  font-size: 16px;
+  font-weight: bold;
+  color: $lightText;
+  text-align: center;
+}
