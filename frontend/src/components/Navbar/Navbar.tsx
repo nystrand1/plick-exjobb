@@ -14,7 +14,7 @@ interface ISidebarLink {
   passive_icon: React.FunctionComponent
 }
 
-export const Sidebar = (props) => {
+export const Navbar = (props) => {
   const links: ISidebarLink[] = [
     {
       to: '/',

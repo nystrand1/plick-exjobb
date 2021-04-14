@@ -1,4 +1,4 @@
-@import '../../styles/colors';
+@import '../../styles/all';
 
 .appWrapper {
   width: 100%;
@@ -6,9 +6,6 @@
 }
 
 .contentWrapper {
-  position: absolute;
-  top: 0;
-  left: 178px;
-  right: 0;
+  padding: $mediumMargin 0;
   background-color: $backgroundGray;
 }
