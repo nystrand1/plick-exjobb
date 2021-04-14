@@ -56,6 +56,17 @@ def get_seasonal_interval(data):
         return 12
 
 
+def get_sarima_model(dataset):
+    formatted_data = np.array([d['count'] for d in dataset])
+    train_size = int(TRAIN_SIZE_PERCENTAGE*len(dataset)/100)
+    train = formatted_data[:train_size]
+    test = formatted_data[train_size:]
+    seasonal_interval = 7
+    model = get_model(formatted_data, train, seasonal_interval)
+    predictions = model.predict(len(test))
+    logging.debug(model.summary())
+    return model
+
 def handle_auto_sarima_regression(db):
     data = request.json
     dataset = count_interval_unique(db=db, **data)
