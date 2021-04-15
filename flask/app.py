@@ -116,26 +116,36 @@ def sarima_test():
     return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
 
 
-@app.route('/trending-words', methods=['GET'])
+@app.route('/trending-words', methods=['POST'])
 @cross_origin()
 def trending_words():
-    res = get_trending_words(db)
+    data = request.json
+    logging.debug(request)
+    limit = data['limit']
+    res = get_trending_words(db, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/trending-categories', methods=['GET'])
+@app.route('/trending-categories', methods=['POST'])
 @cross_origin()
 def trending_categories():
     res = get_trending_categories(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/trending-brands', methods=['GET'])
+@app.route('/trending-brands', methods=['POST'])
 @cross_origin()
 def trending_brands():
     res = get_trending_brands(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/trending-ads', methods=['GET'])
+@app.route('/trending-ads', methods=['POST'])
 @cross_origin()
 def get_trending_ads():
     res = get_ads("nike")
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/query-dataset', methods=['POST'])
+@cross_origin()
+def query_dataset():
+    data = request.json
+    res = get_query_dataset(db, data['query'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")

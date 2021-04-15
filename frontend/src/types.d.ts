@@ -18,3 +18,8 @@ interface ICountRequestData {
   end_date?: Date
   degrees?: number
 }
+
+interface ITrendingRequestData {
+  limit?: number
+}
+
