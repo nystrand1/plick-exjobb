@@ -27,18 +27,22 @@ export class Api {
     return this.post('auto-sarima', data)
   }
 
-  static async trendingWords(data?: ITrendingRequestData) {
+  static async trendingSearchTerms(data?: ITrendingRequestData) {
     return this.post('trending-words', data)
   }
-  
-  static async trendingBrands() {
-    return this.post('trending-brands')
+
+  static async trendingBrands(data?: ITrendingRequestData) {
+    return this.post('trending-brands', data)
   }
-  
-  static async trendingCategories() {
-    return this.post('trending-categories')
+
+  static async trendingCategories(data?: ITrendingRequestData) {
+    return this.post('trending-categories', data)
   }
-  
+
+  static async exampleAds(data?: IExampleAdsRequestData) {
+    return this.post('example-ads', data)
+  }
+
   static async get(endpoint: string, data = {}) {
     const response = await axios.get(endpoint, data)
     return response.data

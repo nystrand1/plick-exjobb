@@ -13,8 +13,7 @@ export const months = [
   'december',
 ]
 
-export const getPastDate = (numberOfDays: number) => {
-  const today = new Date()
+export const getPastDate = (numberOfDays: number, today: Date) => {
   const day = 24 * 60 * 60 * 1000
   return new Date(today.getTime() - numberOfDays * day)
 }

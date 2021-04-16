@@ -7,48 +7,61 @@ export const GraphTool = () => {
   const [graphHeight, setHeight] = React.useState(0)
   const [graphWidth, setWidth] = React.useState(0)
   const graphRef = React.useRef<HTMLDivElement>(null)
-
-  React.useEffect(() => {
-    if (graphRef.current) {
-      setHeight(graphRef.current?.getBoundingClientRect().height)
-      setWidth(graphRef.current?.getBoundingClientRect().width)
-    }
-  }, [])
-
   const {
     startDate,
     endDate,
     resolution,
+    activeType,
     setStartDate,
     setEndDate,
     setResolution,
+    setActiveLines,
+    setactiveType,
   } = useContext()
-  const [activeType, setactiveType] = React.useState<'queries' | 'brands' | 'categories'>(
-    'queries',
-  )
   const options = ['kvart', 'timme', 'dag', 'vecka', 'månad']
+
+  React.useEffect(() => {
+    window.addEventListener('resize', setSize)
+    setSize()
+
+    return () => {
+      window.removeEventListener('resize', setSize)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    setActiveLines([])
+  }, [activeType, setActiveLines])
+
+  const setSize = () => {
+    if (graphRef.current) {
+      setHeight(graphRef.current?.getBoundingClientRect().height)
+      setWidth(graphRef.current?.getBoundingClientRect().width)
+    }
+  }
+
   return (
     <div className="col-12">
       <div className={s.graphToolWrapper}>
         <div className={s.topSection}>
           <div className={s.typeSelection}>
             <LargeButton
-              active={activeType === 'queries'}
-              onClick={() => setactiveType('queries')}
+              active={activeType === 'searchTerms'}
+              onClick={() => setactiveType('searchTerms')}
             >
-              Queries
+              Söktermer
             </LargeButton>
             <LargeButton
               active={activeType === 'brands'}
               onClick={() => setactiveType('brands')}
             >
-              Brands
+              Märken
             </LargeButton>
             <LargeButton
               active={activeType === 'categories'}
               onClick={() => setactiveType('categories')}
             >
-              Categories
+              Kategorier
             </LargeButton>
           </div>
           <div className={s.dateSelection}>

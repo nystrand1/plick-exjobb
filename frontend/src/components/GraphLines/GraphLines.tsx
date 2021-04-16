@@ -1,60 +1,32 @@
 import * as React from 'react'
 import s from './GraphLines.module.scss'
-import { colors } from '~utils'
-import { ReactComponent as DownArrow } from '~static/svg/down-arrow.svg'
+import { useContext } from '~contexts'
 import { ReactComponent as SearchIcon } from '~static/svg/search.svg'
-import { ReactComponent as MoreIcon } from '~static/svg/more.svg'
+import { SearchTermLines } from './SearchTermLines'
+import { BrandLines } from './BrandLines'
+import { CategoryLines } from './CategoryLines'
 
 export const GraphLines = () => {
-  const [activeLines, setActiveLines] = React.useState([1, 2])
-  const lines = [
-    {
-      id: 0,
-      query: 'Skor',
-      metrics: [
-        {
-          longTerm: 2,
-          shortTerm: 14,
-        },
-      ],
-      words: ['Nike', 'Skor 38', 'Air Force 1', 'Adidas'],
-    },
-    {
-      id: 1,
-      query: 'Tröjor',
-      metrics: [
-        {
-          longTerm: 2,
-          shortTerm: 14,
-        },
-      ],
-    },
-    {
-      id: 2,
-      query: 'Byxor',
-      metrics: [
-        {
-          longTerm: 2,
-          shortTerm: 14,
-        },
-      ],
-    },
-    {
-      id: 3,
-      query: 'Mössor',
-      metrics: [
-        {
-          longTerm: 2,
-          shortTerm: 14,
-        },
-      ],
-    },
-  ]
+  const { activeType, activeLines, setActiveLines } = useContext()
 
   const toggleLine = (line) => {
-    const i = activeLines.indexOf(line.id)
+    let id
+
+    switch (activeType) {
+      case 'searchTerms':
+        id = line.query.length
+        break
+      case 'brands':
+        id = line.brand_id
+        break
+      case 'categories':
+        id = line.category_id
+        break
+    }
+
+    const i = activeLines.indexOf(id)
     if (i === -1) {
-      setActiveLines([...activeLines, line.id])
+      setActiveLines([...activeLines, id])
     } else {
       const tmpArr = [...activeLines]
       tmpArr.splice(i, 1)
@@ -75,32 +47,9 @@ export const GraphLines = () => {
           <div>LÅNGT INTERVALL</div>
         </div>
       </div>
-      {lines.map((line) => {
-        const style = activeLines.includes(line.id)
-          ? { borderColor: colors[line.id % colors.length] }
-          : {}
-        return (
-          <div className={s.line} style={style} key={line.id}>
-            <button className={s.button} onClick={() => console.log('open')}>
-              <DownArrow />
-            </button>
-            <div className={s.content} onClick={() => toggleLine(line)}>
-              <div className={s.title}>{line.query}</div>
-              <div className={s.values}>
-                {line.metrics?.map((metric, i) => (
-                  <React.Fragment key={i}>
-                    <div>{metric.longTerm}</div>
-                    <div>{metric.shortTerm}</div>
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-            <button className={s.button} onClick={() => console.log('more')}>
-              <MoreIcon />
-            </button>
-          </div>
-        )
-      })}
+      {activeType === 'searchTerms' && <SearchTermLines onClick={toggleLine} />}
+      {activeType === 'brands' && <BrandLines onClick={toggleLine} />}
+      {activeType === 'categories' && <CategoryLines onClick={toggleLine} />}
     </div>
   )
 }

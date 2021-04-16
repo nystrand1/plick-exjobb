@@ -120,7 +120,6 @@ def sarima_test():
 @cross_origin()
 def trending_words():
     data = request.json
-    logging.debug(request)
     limit = data['limit']
     res = get_trending_words(db, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
@@ -128,19 +127,26 @@ def trending_words():
 @app.route('/trending-categories', methods=['POST'])
 @cross_origin()
 def trending_categories():
+    data = request.json
+    limit = data['limit']
     res = get_trending_categories(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-brands', methods=['POST'])
 @cross_origin()
 def trending_brands():
+    data = request.json
+    limit = data['limit']
     res = get_trending_brands(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/trending-ads', methods=['POST'])
+@app.route('/example-ads', methods=['POST'])
 @cross_origin()
-def get_trending_ads():
-    res = get_ads("nike")
+def get_example_ads():
+    data = request.json
+    query = data['query']
+    limit = data['limit']
+    res = get_ads(query, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/query-dataset', methods=['POST'])
