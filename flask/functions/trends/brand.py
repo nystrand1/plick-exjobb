@@ -19,7 +19,7 @@ def get_brand_candidates(db):
         SELECT count(DISTINCT record.id) as count, brand.id, brand.name
         FROM plick.search_record_processed as record
         INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
-        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        WHERE record.created_at > '2021-04-18'::date - interval '7 day'
         GROUP BY brand.id
         HAVING count(DISTINCT record.id) > 1000
         ORDER BY count(DISTINCT record.id) DESC
@@ -42,7 +42,7 @@ def get_popular_categories_in_brands(db, brand_ids):
         FROM plick.search_record_processed as record
         INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
         INNER JOIN plick.categories as category on category.id = ANY(record.category_ids)
-        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        WHERE record.created_at > '2021-04-18'::date - interval '7 day'
         AND :brand_ids && record.brand_ids
         GROUP BY brand.name, brand.id, category.name
         ORDER BY count(DISTINCT record.id) DESC
@@ -65,7 +65,7 @@ def get_popular_words_in_brands(db, brand_ids):
     SELECT count(DISTINCT record.id) as count, brand.name, query_processed as words, query
         FROM plick.search_record_processed as record
         INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
-        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        WHERE record.created_at > '2021-04-18'::date - interval '7 day'
         AND :brand_ids && record.brand_ids
         AND query_processed is not null
         GROUP BY brand.name, record.query_processed, query
@@ -120,13 +120,13 @@ def get_trending_brands(db, limit=5, k_threshold=0.5):
         res_arr.append(data)
     return res_arr 
 
-def get_brand_dataset(db, brand): 
+def get_brand_dataset(db, brand_id): 
     res = db.session.execute("""
         SELECT *
         FROM plick.brand_trends
-        WHERE brand like :brand
+        WHERE brand_id = :brand_id
     """, {
-        'brand': brand
+        'brand_id': brand_id
     })
     res_arr = []
     for r in res:
@@ -147,7 +147,7 @@ def generate_brand_datasets(db):
 def generate_brand_dataset(db, brand):
     data = dict()
     data['start_date'] = "2021-01-01"
-    data['end_date'] = "2021-03-15"
+    data['end_date'] = "2021-04-18"
     data['brand_id'] = brand['id']
     data['trunc_by'] = "minute"
     generate_brand_time_series(db, brand['id'])
@@ -196,7 +196,7 @@ def generate_brand_time_series(db, brand_id=11):
 		INNER JOIN plick.categories as cat on cat.id = ANY(record.brand_ids)
         WHERE record.brand_ids && ARRAY[:brand_id]
 		AND
-        record.created_at BETWEEN '2021-01-01'::date AND '2021-03-15'::date + interval '1 day'
+        record.created_at BETWEEN '2021-01-01'::date AND '2021-04-18'::date + interval '1 day'
         GROUP BY floor(extract('epoch' from record.created_at) / (60*15));
 
         CREATE UNIQUE INDEX IF NOT EXISTS time_series_interval_brand_{}
@@ -205,7 +205,7 @@ def generate_brand_time_series(db, brand_id=11):
         'brand_id': brand_id
     })
 
-def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="2021-03-15", trunc_by="day", brand_id=10):
+def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="2021-04-18", trunc_by="day", brand_id=10):
     
     CACHE_KEY = "_BRAND_TIME_SERIES_OVERLAPPING_{}_{}".format(brand_id, trunc_by)
 

@@ -21,7 +21,7 @@ def get_category_candidates(db):
         SELECT count(DISTINCT record.id) as count, cat.id, cat.name
         FROM plick.search_record_processed as record
         INNER JOIN plick.categories as cat on cat.id = ANY(record.category_ids)
-        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        WHERE record.created_at > '2021-04-18'::date - interval '7 day'
         GROUP BY cat.id, cat.name
         HAVING count(DISTINCT record.id) > 1000
         ORDER BY count(DISTINCT record.id) DESC
@@ -43,7 +43,7 @@ def get_popular_words_in_categorys(db, category_ids):
     SELECT count(DISTINCT record.id) as count, category.name, query_processed as words, query
         FROM plick.search_record_processed as record
         INNER JOIN plick.categories as category on category.id = ANY(record.category_ids)
-        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        WHERE record.created_at > '2021-04-18'::date - interval '7 day'
         AND :category_ids && record.category_ids
         AND query_processed is not null
         GROUP BY category.name, record.query_processed, query
@@ -123,7 +123,7 @@ def generate_category_dataset(db, category, calcualate_sarima = False):
     logging.debug(category)
     data = dict()
     data['start_date'] = "2021-01-01"
-    data['end_date'] = "2021-03-15"
+    data['end_date'] = "2021-04-18"
     data['category_id'] = category['id']
     data['trunc_by'] = "minute"
     generate_category_time_series(db, category['id'])
@@ -182,7 +182,7 @@ def generate_category_time_series(db, category_id=11):
         'category_id': category_id
     })
 
-def get_category_time_series_overlapping(db, start_date="2021-01-01", end_date="2021-03-15", trunc_by="day", category_id=11):
+def get_category_time_series_overlapping(db, start_date="2021-01-01", end_date="2021-04-18", trunc_by="day", category_id=11):
     CACHE_KEY = "_CATEGORY_TIME_SERIES_OVERLAPPING_{}_{}".format(category_id, trunc_by)
 
     if(cache.get(CACHE_KEY)):
@@ -249,6 +249,15 @@ def store_sarima_model(db, serialized_model):
     record = db.session.query(CategoryTrend).filter_by(category_id=12).first()
     if(record is not None):
         record.model_sarima = serialized_model
+    else:
+        logging.debug("what")
+    db.session.commit()
+
+
+def store_tcn_model(db, serialized_model):
+    record = db.session.query(CategoryTrend).filter_by(category_id=12).first()
+    if(record is not None):
+        record.model_tcn = serialized_model
     else:
         logging.debug("what")
     db.session.commit()

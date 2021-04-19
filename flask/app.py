@@ -10,12 +10,15 @@ from flask import Flask, request, Response
 from flask_sqlalchemy import SQLAlchemy as sa
 from flask_sqlalchemy import Model
 from flask_cors import CORS, cross_origin
-from flask_caching import Cache
 from http import HTTPStatus
 
 import multiprocessing
 from joblib import Parallel
 from joblib import delayed
+
+from darts import TimeSeries
+from darts.models import AutoARIMA
+from darts.models import TCNModel
 
 from .models.search_record import SearchRecord
 from .models.brand_trend import *
@@ -26,13 +29,14 @@ from .functions.trends.brand import *
 from .functions.trends.category import *
 from .functions.trends.query import *
 
-from .functions.utils.sanitizer import *
+#from .functions.utils.sanitizer import *
 from .functions.count_interval import *
 from .functions.regression.linear import *
 from .functions.regression.arma import handle_arma_regression
 from .functions.regression.sarma import handle_sarma_regression
 from .functions.regression.lstm import handle_lstm
 from .functions.regression.auto_sarima import handle_auto_sarima_regression
+from .functions.regression.tcn import get_tcn_model
 from .functions.utils.dataset import *
 from .functions.process_queries import *
 from .functions.utils.plick import *
@@ -45,15 +49,6 @@ db = sa(app)
 
 CORS(app, resources={r"/*": {"origins": "*"}})
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
-@app.route('/linear-regression', methods=['POST'])
-@cross_origin()
-def linear_regression():
-    inputs = LinearRegressionInputs(request)
-    if not inputs.validate():
-        return Response(json.dumps(inputs.errors), status=HTTPStatus.BAD_REQUEST, content_type="application/json")
-    res = handle_linear_regression(db)
-    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/arma-regression', methods=['POST'])
 @cross_origin()
@@ -149,3 +144,40 @@ def query_dataset():
     data = request.json
     res = get_query_dataset(db, data['query'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/darts-test', methods=['GET'])
+@cross_origin()
+def darts_test():
+    dataset = get_brand_dataset(db, 11)
+    logging.debug(dataset['time_series_hour'])
+    dataset = dataset['time_series_day']
+    test = pd.DataFrame.from_dict(dataset)
+    test.to_csv('./functions/regression/nike.csv')
+    # ts = TimeSeries.from_dataframe(test, time_col='time_interval', value_cols=['count'])
+    
+    # latest_date = datetime.strptime(dataset[-1]['time_interval'], '%Y-%m-%d %H:%M:%S')
+    # split_date = latest_date - timedelta(days=15)
+
+    # train, val = ts.split_after(pd.Timestamp(split_date))
+    # logging.debug(ts)
+    # logging.debug(train)
+    
+    # tcn = TCNModel(
+    #     input_chunk_length=(24*14) + 1,
+    #     output_chunk_length=24*14,
+    #     n_epochs=400,
+    #     dropout=0.1,
+    #     dilation_base=2,
+    #     weight_norm=True,
+    #     kernel_size=5,
+    #     num_filters=3,
+    #     random_state=0
+    # )
+    # tcn.fit(ts)
+    # logging.debug(tcn.predict(1))
+    # arima = AutoARIMA()
+    # arima.fit(series=ts)
+    # logging.debug(arima.model.summary())
+    # logging.debug(ts)
+    # logging.debug(arima.predict(1))
+    return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")

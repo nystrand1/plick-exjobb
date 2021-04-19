@@ -3,7 +3,6 @@ redis
 sqlalchemy
 flask_sqlalchemy
 python-decouple
-flask-cors
 numpy
 pandas
 scikit-learn
@@ -13,7 +12,6 @@ jsonschema
 statsmodels
 joblib
 pmdarima
-flask-caching
 requests
 simplejson
 darts

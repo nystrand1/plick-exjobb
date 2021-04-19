@@ -17,7 +17,7 @@ def get_query_candidates(db, seperate_brand_categories = False):
         LEFT JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
         WHERE LENGTH(query_processed) > 1
         AND
-        record.created_at > '2021-03-15'::date - interval '7 day'
+        record.created_at > '2021-04-18'::date - interval '7 day'
         GROUP BY query_processed, cat.name, brand.name
         HAVING count(query_processed) > 100
         ORDER BY amount DESC
@@ -28,7 +28,7 @@ def get_query_candidates(db, seperate_brand_categories = False):
         FROM plick.search_record_processed
         WHERE LENGTH(query_processed) > 1
         AND
-        created_at > '2021-03-15'::date - interval '7 day'
+        created_at > '2021-04-18'::date - interval '7 day'
         GROUP BY query_processed
         HAVING count(query_processed) > 300
         ORDER BY amount DESC
@@ -127,7 +127,7 @@ def generate_query_datasets(db):
 
     data = dict()
     data['start_date'] = "2021-01-01"
-    data['end_date'] = "2021-03-15"
+    data['end_date'] = "2021-04-18"
     processed_queries = []
     [generate_query_dataset(db, data, query, processed_queries) for query in queries] 
     return "success"
