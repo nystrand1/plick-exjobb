@@ -6,7 +6,7 @@ from datetime import datetime
 
 from ..utils.dataset import split_dataset
 from ..regression.linear import get_linear_model
-from ..regression.auto_sarima import get_sarima_model
+from ..regression.sarima import get_sarima_model
 from ...models.category_trend import CategoryTrend
 cache = redis.Redis(host='redis', port=6379)
 
@@ -243,21 +243,4 @@ def save_to_db(db, data):
     else:
         record = CategoryTrend(**data)
         db.session.add(record)
-    db.session.commit()
-
-def store_sarima_model(db, serialized_model):
-    record = db.session.query(CategoryTrend).filter_by(category_id=12).first()
-    if(record is not None):
-        record.model_sarima = serialized_model
-    else:
-        logging.debug("what")
-    db.session.commit()
-
-
-def store_tcn_model(db, serialized_model):
-    record = db.session.query(CategoryTrend).filter_by(category_id=12).first()
-    if(record is not None):
-        record.model_tcn = serialized_model
-    else:
-        logging.debug("what")
     db.session.commit()

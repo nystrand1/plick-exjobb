@@ -32,11 +32,9 @@ from .functions.trends.query import *
 #from .functions.utils.sanitizer import *
 from .functions.count_interval import *
 from .functions.regression.linear import *
-from .functions.regression.arma import handle_arma_regression
-from .functions.regression.sarma import handle_sarma_regression
-from .functions.regression.lstm import handle_lstm
-from .functions.regression.auto_sarima import handle_auto_sarima_regression
-from .functions.regression.tcn import get_tcn_model
+from .functions.regression.sarima import *
+from .functions.regression.lstm import *
+from .functions.regression.tcn import *
 from .functions.utils.dataset import *
 from .functions.process_queries import *
 from .functions.utils.plick import *
@@ -108,6 +106,18 @@ def sarima_test():
     model = get_sarima_model(dataset)
     store_sarima_model(db, pickle.dumps(model))
     logging.debug(model.summary())
+    return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/tcn-test', methods=['GET'])
+@cross_origin()
+def tcn_test():
+    dataset = get_category_dataset(db, 12)
+    logging.debug(dataset['time_series_day'])
+    dataset = dataset['time_series_day']
+    model = get_tcn_model(dataset=dataset)
+    predictions = get_tcn_predictions(model)
+    store_tcn_model(db, pickle.dumps(model), trend_type="category", id=12)
+    store_tcn_prediction(db, prediction=predictions)
     return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
 
 

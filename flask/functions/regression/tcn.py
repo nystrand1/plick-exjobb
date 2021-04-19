@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
 import logging
+import simplejson as json
 import matplotlib.pyplot as plt
 
-from ...models.brand_trend import BrandTrend
-from ...models.category_trend import CategoryTrend
-from ...models.query_trend import QueryTrend
+# from ...models.brand_trend import BrandTrend
+# from ...models.category_trend import CategoryTrend
+# from ...models.query_trend import QueryTrend
+from ..utils.dataset import to_dataset
 
 from datetime import datetime
 from darts import TimeSeries
@@ -16,7 +18,7 @@ from darts.dataprocessing.transformers import Scaler
 from darts.utils.timeseries_generation import datetime_attribute_timeseries
 
 
-def get_tcn_model(dataset = None, plot=False):
+def get_tcn_model(dataset = None, plot=False, verbose=False):
     #dataset = dataset['time_series_hour']
 #    df = pd.DataFrame.from_dict(dataset)
     if(dataset is None):
@@ -44,21 +46,19 @@ def get_tcn_model(dataset = None, plot=False):
         val_series=val,
         verbose=True,
     )
-    logging.debug(tcn)
     tcn_model = tcn[0]
-    tcn_model.fit(series=train, val_series=val)
-    backtest = tcn_model.historical_forecasts(
-        series=ts,
-        start=0.8,
-        forecast_horizon=1,
-        stride=1,
-        retrain=False,
-        verbose=True
-    )
-
-    future = tcn_model.predict(7)
-
+    tcn_model.fit(series=ts)
     if(plot):
+        backtest = tcn_model.historical_forecasts(
+            series=ts,
+            start=0.8,
+            forecast_horizon=1,
+            stride=1,
+            retrain=False,
+            verbose=True
+        )
+
+        future = tcn_model.predict(7)
         backtest.plot(label='backtest')
         future.plot(label='future')
         ts.plot(label='actual')
@@ -67,7 +67,19 @@ def get_tcn_model(dataset = None, plot=False):
     else: 
         return tcn_model
 
-def store_tcn_model(db, serialized_model, trend_type="category", id=12):
+def get_tcn_predictions(model):
+    prediction = model.predict(7) #Predict a week ahead
+    prediction_json = json.loads(prediction.to_json())
+    print(prediction_json)
+    dates = prediction_json['index']
+    counts = prediction_json['data']
+    print(dates)
+    print(counts)
+    prediction_dataset = to_dataset(dates, counts)
+    print(prediction_dataset)
+    return prediction_dataset
+
+def store_tcn_model(db, serialized_model = None, trend_type="category", id=12):
     if(trend_type=="category"):
         record = db.session.query(CategoryTrend).filter_by(category_id=id).first()
     elif(trend_type=="brand"):
@@ -80,6 +92,19 @@ def store_tcn_model(db, serialized_model, trend_type="category", id=12):
         logging.debug("what")
     db.session.commit()
 
+def store_tcn_prediction(db, prediction = False, trend_type="category", id=12):
+    if(trend_type=="category"):
+        record = db.session.query(CategoryTrend).filter_by(category_id=id).first()
+    elif(trend_type=="brand"):
+        record = db.session.query(BrandTrend).filter_by(brand_id=id).first()
+    else:
+        record = db.session.query(BrandTrend).filter_by(query=id).first()
+    if(record is not None):
+        record.tcn_prediction = prediction
+    else:
+        logging.debug("what")
+    db.session.commit()
+
 if __name__ == '__main__':
     print("hello")
-    get_tcn_model(plot=True)
+    get_tcn_model(plot=True, verbose=True)
