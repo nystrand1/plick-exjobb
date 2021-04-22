@@ -1,11 +1,13 @@
 import logging
 import redis
 import json
+import pickle
 from datetime import datetime
 
 from ..utils.dataset import split_dataset
 from ..regression.linear import get_linear_model
 from ...models.brand_trend import BrandTrend
+from ..regression.tcn import *
 
 cache = redis.Redis(host='redis', port=6379)
 
@@ -133,6 +135,32 @@ def get_brand_dataset(db, brand_id):
         res_arr.append(dict(r))
     res_arr.reverse()
     return res_arr[0]
+
+def get_all_brand_datasets(db):
+    res = db.session.execute("""
+        SELECT brand_id, brand_name, model_tcn, model_lstm, model_sarima, time_series_day
+        FROM plick.brand_trends
+    """)
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+    res_arr.reverse()
+    return res_arr
+
+def generate_brand_tcn_models(db):
+    param_dict = dict()
+    datasets = get_all_brand_datasets(db)
+    for dataset in datasets:
+        ts = dataset['time_series_day']
+        if(dataset['model_tcn'] is None):
+            model = get_tcn_model(dataset=ts)
+            param_dict[dataset['brand_name']] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_tcn'])
+        predictions = get_tcn_predictions(model)
+        store_tcn_model(db, pickle.dumps(model), trend_type="brand", id=dataset['brand_id'])
+        store_tcn_prediction(db, prediction=predictions, trend_type="brand", id=dataset['brand_id'])
 
 def generate_brand_datasets(db):
     CACHE_KEY = "_BRANDS"

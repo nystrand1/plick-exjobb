@@ -1,11 +1,13 @@
 import logging
 import redis
 import json
+import pickle
 from datetime import datetime
 
 from ..utils.dataset import split_dataset
 from ..regression.linear import get_linear_model
 from ...models.query_trend import QueryTrend
+from ..regression.tcn import *
 cache = redis.Redis(host='redis', port=6379)
 
 def get_query_candidates(db, seperate_brand_categories = False):
@@ -117,6 +119,21 @@ def get_trending_words(db, limit=5, k_threshold=0):
         res_arr.append(tmp)
     return res_arr 
 
+def generate_query_tcn_models(db):
+    param_dict = dict()
+    datasets = get_all_query_datasets(db)
+    for dataset in datasets:
+        ts = dataset['time_series_day']
+        if(dataset['model_tcn'] is None):
+            model = get_tcn_model(dataset=ts)
+            param_dict[dataset['query']] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_tcn'])
+        predictions = get_tcn_predictions(model)
+        store_tcn_model(db, pickle.dumps(model), trend_type="query", id=dataset['query'])
+        store_tcn_prediction(db, prediction=predictions, trend_type="query", id=dataset['query'])
+
 def generate_query_datasets(db):
     CACHE_KEY = "_QUERY_CANDIDATES"
     if(cache.get(CACHE_KEY)):
@@ -213,6 +230,18 @@ def get_query_dataset(db, query):
         res_arr.append(dict(r))
     res_arr.reverse()
     return res_arr[0]
+
+def get_all_query_datasets(db):
+    res = db.session.execute("""
+        SELECT query, model_tcn, model_lstm, model_sarima, time_series_day
+        FROM plick.query_trends
+    """)
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+    res_arr.reverse()
+
+    return res_arr
 
 def get_query_time_series(db, query="nike", trunc_by="hour", start_date="2021-01-25", end_date="2021-01-31", similar_queries=[]):
     CACHE_KEY = "_COUNTSIM:{}:FROM:{}:TO:{}:TRUNC_BY:{}".format(

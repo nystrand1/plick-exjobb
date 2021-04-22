@@ -97,6 +97,17 @@ def generate_trend_data():
     res = generate_brand_datasets(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+@app.route('/generate-tcn-models', methods=['GET'])
+@cross_origin()
+def generate_tcn_models():
+    logging.debug("GENERATING QUERY TCN MODELS")
+    generate_query_tcn_models(db)
+    logging.debug("GENERATING CATEGORY TCN MODELS")
+    #generate_category_tcn_models(db)
+    logging.debug("GENERATING BRAND TCN MODELS")
+    #generate_brand_tcn_models(db)
+    return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
+
 @app.route('/sarima-test', methods=['GET'])
 @cross_origin()
 def sarima_test():
@@ -111,15 +122,23 @@ def sarima_test():
 @app.route('/tcn-test', methods=['GET'])
 @cross_origin()
 def tcn_test():
-    dataset = get_category_dataset(db, 12)
-    logging.debug(dataset['time_series_day'])
-    dataset = dataset['time_series_day']
-    model = get_tcn_model(dataset=dataset)
-    predictions = get_tcn_predictions(model)
-    store_tcn_model(db, pickle.dumps(model), trend_type="category", id=12)
-    store_tcn_prediction(db, prediction=predictions)
-    return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
+    param_dict = dict()
+    for i in range(1, 21):
+        dataset = get_category_dataset(db, i)
+        logging.debug(dataset['time_series_day'])
+        ts = dataset['time_series_day']
+        if(dataset['model_tcn'] is None):
+            model = get_tcn_model(dataset=ts)
+            param_dict[i] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_tcn'])
+        predictions = get_tcn_predictions(model)
+        store_tcn_model(db, pickle.dumps(model), trend_type="category", id=i)
+        store_tcn_prediction(db, prediction=predictions, id=i)
 
+    logging.debug(param_dict)
+    return Response(json.dumps(predictions), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-words', methods=['POST'])
 @cross_origin()
@@ -158,11 +177,11 @@ def query_dataset():
 @app.route('/darts-test', methods=['GET'])
 @cross_origin()
 def darts_test():
-    dataset = get_brand_dataset(db, 11)
-    logging.debug(dataset['time_series_hour'])
+    dataset = get_brand_dataset(db, 5)
+    logging.debug(dataset['time_series_day'])
     dataset = dataset['time_series_day']
     test = pd.DataFrame.from_dict(dataset)
-    test.to_csv('./functions/regression/nike.csv')
+    test.to_csv('./functions/regression/mk_day.csv')
     # ts = TimeSeries.from_dataframe(test, time_col='time_interval', value_cols=['count'])
     
     # latest_date = datetime.strptime(dataset[-1]['time_interval'], '%Y-%m-%d %H:%M:%S')

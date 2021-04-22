@@ -8,6 +8,8 @@ from ..utils.dataset import split_dataset
 from ..regression.linear import get_linear_model
 from ..regression.sarima import get_sarima_model
 from ...models.category_trend import CategoryTrend
+from ..regression.tcn import *
+
 cache = redis.Redis(host='redis', port=6379)
 
 
@@ -94,6 +96,33 @@ def get_trending_categories(db, limit=5, k_threshold=0.5):
         data['monthly_diff_percentage'] = float(r['monthly_diff_percentage'])
         res_arr.append(data)
     return res_arr 
+
+def generate_category_tcn_models(db):
+    param_dict = dict()
+    datasets = get_all_category_datasets(db)
+    for dataset in datasets:
+        ts = dataset['time_series_day']
+        if(dataset['model_tcn'] is None):
+            model = get_tcn_model(dataset=ts)
+            param_dict[dataset['category_name']] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_tcn'])
+        predictions = get_tcn_predictions(model)
+        store_tcn_model(db, pickle.dumps(model), trend_type="category", id=dataset['category_id'])
+        store_tcn_prediction(db, prediction=predictions, trend_type="category", id=dataset['category_id'])
+
+
+def get_all_category_datasets(db):
+    res = db.session.execute("""
+        SELECT category_id, category_name, model_tcn, model_lstm, model_sarima, time_series_day
+        FROM plick.category_trends
+    """)
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+    res_arr.reverse()
+    return res_arr
 
 def get_category_dataset(db, category_id): 
     res = db.session.execute("""
