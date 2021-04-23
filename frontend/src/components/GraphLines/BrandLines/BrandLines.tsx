@@ -14,7 +14,7 @@ export const BrandLines = ({ onClick }: BrandLinesProps) => {
   return (
     <>
       {topListBrands?.map((line, i) => {
-        const style = activeLines.includes(line.brand_id)
+        const style = activeLines.includes(line.brand_name)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (
@@ -29,9 +29,6 @@ export const BrandLines = ({ onClick }: BrandLinesProps) => {
                 <div>{line.monthly_diff}</div>
               </div>
             </div>
-            <button className={s.button} onClick={() => console.log('more')}>
-              <MoreIcon />
-            </button>
           </div>
         )
       })}

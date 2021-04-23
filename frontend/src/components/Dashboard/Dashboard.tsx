@@ -5,10 +5,23 @@ import { TopList, GraphTool } from '~components'
 import { useContext } from '~contexts'
 
 export const Dashboard = () => {
-  const { setTopListSearchTerms, setTopListBrands, setTopListCategories } = useContext()
+  const {
+    setTopListSearchTerms,
+    setTopListBrands,
+    setTopListCategories,
+    setTimeSeriesSerachTerms,
+  } = useContext()
   React.useEffect(() => {
     Api.trendingSearchTerms({ limit: 5 }).then((data) => {
       setTopListSearchTerms(data)
+
+      const tmpArr: ITimeSeriesSearchTerms[] = []
+      data.forEach((element) => {
+        Api.queryDataset({ query: element.query }).then((data) => {
+          tmpArr.push(data[0])
+        })
+      })
+      setTimeSeriesSerachTerms(tmpArr)
     })
     Api.trendingBrands({ limit: 5 }).then((data) => {
       setTopListBrands(data)
@@ -16,7 +29,12 @@ export const Dashboard = () => {
     Api.trendingCategories({ limit: 5 }).then((data) => {
       setTopListCategories(data)
     })
-  }, [setTopListSearchTerms, setTopListBrands, setTopListCategories])
+  }, [
+    setTopListSearchTerms,
+    setTopListBrands,
+    setTopListCategories,
+    setTimeSeriesSerachTerms,
+  ])
   return (
     <div className={`${s.dashboardWrapper}`}>
       <div className="row">

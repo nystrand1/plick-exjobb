@@ -25,9 +25,6 @@ export const TopListEntry = ({
     Api.exampleAds({ query: query.toLowerCase(), limit: 1 }).then((data) => {
       const ads = data.blocks[0].data.ads
       setImage(ads[Math.floor(Math.random() * ads.length)].ad_photos[0].photo)
-      if (query === 'xs') {
-        console.log(data)
-      }
     })
   }, [query])
 

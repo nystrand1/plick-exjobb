@@ -155,3 +155,10 @@ def query_dataset():
     data = request.json
     res = get_query_dataset(db, data['query'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/brand-dataset', methods=['POST'])
+@cross_origin()
+def brand_dataset():
+    data = request.json
+    res = get_brand_dataset(db, data['brand'])
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")

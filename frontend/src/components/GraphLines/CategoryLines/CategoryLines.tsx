@@ -14,7 +14,7 @@ export const CategoryLines = ({ onClick }: CategoryLinesProps) => {
   return (
     <>
       {topListCategories?.map((line, i) => {
-        const style = activeLines.includes(line.category_id)
+        const style = activeLines.includes(line.category_name)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (
@@ -29,9 +29,6 @@ export const CategoryLines = ({ onClick }: CategoryLinesProps) => {
                 <div>{line.monthly_diff}</div>
               </div>
             </div>
-            <button className={s.button} onClick={() => console.log('more')}>
-              <MoreIcon />
-            </button>
           </div>
         )
       })}

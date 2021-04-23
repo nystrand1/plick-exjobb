@@ -18,7 +18,7 @@ export const GraphTool = () => {
     setActiveLines,
     setactiveType,
   } = useContext()
-  const options = ['kvart', 'timme', 'dag', 'vecka', 'månad']
+  const options = ['hour', 'day', 'week', 'month']
 
   React.useEffect(() => {
     window.addEventListener('resize', setSize)

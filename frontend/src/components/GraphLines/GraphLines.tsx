@@ -14,13 +14,13 @@ export const GraphLines = () => {
 
     switch (activeType) {
       case 'searchTerms':
-        id = line.query.length
+        id = line.query
         break
       case 'brands':
-        id = line.brand_id
+        id = line.brand_name
         break
       case 'categories':
-        id = line.category_id
+        id = line.category_name
         break
     }
 

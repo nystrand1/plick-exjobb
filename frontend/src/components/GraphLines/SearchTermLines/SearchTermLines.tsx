@@ -14,11 +14,11 @@ export const SearchTermLines = ({ onClick }: SearchTermLinesProps) => {
   return (
     <>
       {topListSearchTerms?.map((line, i) => {
-        const style = activeLines.includes(i)
+        const style = activeLines.includes(line.query)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (
-          <div className={s.line} style={style} key={i}>
+          <div className={s.line} style={style} key={line.query}>
             <button className={s.button} onClick={() => console.log('open')}>
               <DownArrow />
             </button>
@@ -29,9 +29,6 @@ export const SearchTermLines = ({ onClick }: SearchTermLinesProps) => {
                 <div>{line.monthly_diff}</div>
               </div>
             </div>
-            <button className={s.button} onClick={() => console.log('more')}>
-              <MoreIcon />
-            </button>
           </div>
         )
       })}

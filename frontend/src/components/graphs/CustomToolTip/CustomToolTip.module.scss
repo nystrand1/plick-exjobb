@@ -1,3 +1,9 @@
-.customTooltip {
-    background-color: black;
+@import '../../../styles/all';
+
+.tooltipWrapper {
+    background-color: white;
+    padding: $mediumMargin;
+    font-size: 14px;
+    border-radius: $borderRadiusSmall;
+    box-shadow: rgba(0, 0, 0, 0.226) 0px 0px 15px;
 }

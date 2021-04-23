@@ -43,6 +43,10 @@ export class Api {
     return this.post('example-ads', data)
   }
 
+  static async queryDataset(data: IQueryDatasetData) {
+    return this.post('query-dataset', data)
+  }
+
   static async get(endpoint: string, data = {}) {
     const response = await axios.get(endpoint, data)
     return response.data

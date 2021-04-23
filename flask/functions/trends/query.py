@@ -212,7 +212,7 @@ def get_query_dataset(db, query):
     for r in res:
         res_arr.append(dict(r))
     res_arr.reverse()
-    return res_arr[0]
+    return res_arr
 
 def get_query_time_series(db, query="nike", trunc_by="hour", start_date="2021-01-25", end_date="2021-01-31", similar_queries=[]):
     CACHE_KEY = "_COUNTSIM:{}:FROM:{}:TO:{}:TRUNC_BY:{}".format(

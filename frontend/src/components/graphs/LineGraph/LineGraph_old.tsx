@@ -68,10 +68,7 @@ export const LineGraphOld = (props: LineGraphProps) => {
           />
         )
       })}
-      <Tooltip
-        labelStyle={{ color: 'black' }}
-        content={<CustomTooltip fallBackName={title} />}
-      />
+      <Tooltip labelStyle={{ color: 'black' }} content={<CustomTooltip />} />
       <Legend />
     </LineChart>
   )

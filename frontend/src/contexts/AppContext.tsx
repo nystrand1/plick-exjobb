@@ -11,12 +11,15 @@ const useProviderValue = () => {
   const [startDate, setStartDate] = React.useState(new Date('2021-01-01'))
   const [endDate, setEndDate] = React.useState(new Date('2021-02-18'))
   const [graphData, setGraphData] = React.useState<IDataSet[]>()
-  const [resolution, setResolution] = React.useState('dag')
+  const [resolution, setResolution] = React.useState('day')
   const [loading, setLoading] = React.useState(true)
-  const [activeLines, setActiveLines] = React.useState<number[]>([])
+  const [activeLines, setActiveLines] = React.useState<string[]>([])
   const [activeType, setactiveType] = React.useState<
     'searchTerms' | 'brands' | 'categories'
-  >('brands')
+  >('searchTerms')
+  const [timeSeriesSerachTerms, setTimeSeriesSerachTerms] = React.useState<
+    ITimeSeriesSearchTerms[]
+  >([])
 
   const value = React.useMemo(
     () => ({
@@ -32,6 +35,7 @@ const useProviderValue = () => {
       loading,
       activeLines,
       activeType,
+      timeSeriesSerachTerms,
       setData,
       setTopListSearchTerms,
       setTopListBrands,
@@ -44,6 +48,7 @@ const useProviderValue = () => {
       setLoading,
       setActiveLines,
       setactiveType,
+      setTimeSeriesSerachTerms,
     }),
     [
       data,
@@ -58,6 +63,7 @@ const useProviderValue = () => {
       resolution,
       activeLines,
       activeType,
+      timeSeriesSerachTerms,
       setData,
       setTopListSearchTerms,
       setTopListBrands,
@@ -70,6 +76,7 @@ const useProviderValue = () => {
       setLoading,
       setActiveLines,
       setactiveType,
+      setTimeSeriesSerachTerms,
     ],
   )
   return value

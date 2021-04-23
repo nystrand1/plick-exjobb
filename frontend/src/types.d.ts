@@ -28,6 +28,36 @@ interface IExampleAdsRequestData {
   limit?: number
 }
 
+interface IQueryDatasetData {
+  query: string
+}
+
+interface IDataPoint {
+  count: number
+  time_interval: string
+  trends: {}
+}
+
+interface ITimeSeries {
+  created_at: string
+  model_long: number[]
+  model_mid: number[]
+  model_short: number[]
+  model_lstm: number[]
+  model_sarima: number[]
+  similar_queries: string[]
+  time_series_min: []
+  time_series_hour: IDataPoint[]
+  time_series_day: IDataPoint[]
+  time_series_week: IDataPoint[]
+  time_series_month: IDataPoint[]
+  updated_at: string
+}
+
+interface ITimeSeriesSearchTerms extends ITimeSeries {
+  query: string
+}
+
 interface ITopListEntry {
   model_short: number[]
   model_long: number[]
