@@ -25,26 +25,30 @@ def get_tcn_model(dataset = None, plot=False, verbose=False):
     #dataset = dataset['time_series_hour']
 #    df = pd.DataFrame.from_dict(dataset)
     if(dataset is None):
-        df = pd.read_csv("shoes.csv")
+        df = pd.read_csv("nike.csv")
     else:
         df = pd.DataFrame.from_dict(dataset)
     ts = TimeSeries.from_dataframe(df, time_col='time_interval', value_cols=['count'])
-    
-    scaler = Scaler()
-    ts = scaler.fit_transform(ts)
 
     train, val = ts.split_after(0.8) #80% train, 20% val
+
+    scaler = Scaler()
+    train_scaled = scaler.fit_transform(train)
+    val_sclaed = scaler.transform(val)
+    ts_scaled = scaler.transform(ts)
+
+
     params = dict()
     params['kernel_size'] = [2]
     params['num_filters'] = [10]
     params['random_state'] = [0]
     params['input_chunk_length'] = [11]
     params['output_chunk_length'] = [7]
-    params['dilation_base'] = [1,2]
+    params['dilation_base'] = [2, 3]
     params['n_epochs'] = [200]
     params['dropout'] = [0]
     params['nr_epochs_val_period'] = [40]
-    params['loss_fn'] = [L1Loss()]
+    params['loss_fn'] = [MSELoss(), L1Loss()]
     params['weight_norm'] = [True]
     tcn = TCNModel.gridsearch(
         parameters=params,
