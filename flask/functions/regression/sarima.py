@@ -67,7 +67,7 @@ def get_sarima_model(dataset = None, plot=False, verbose=False):
         return [arima_model, params]
 
 def get_model_accuracy(val_series, pred_series):
-    
+    pass
 
 def get_sarima_predictions(model):
     prediction = model.predict(7) #Predict a week ahead

@@ -25,13 +25,13 @@ def get_tcn_model(dataset = None, plot=False, verbose=False):
     #dataset = dataset['time_series_hour']
 #    df = pd.DataFrame.from_dict(dataset)
     if(dataset is None):
-        df = pd.read_csv("mk_day.csv")
+        df = pd.read_csv("shoes.csv")
     else:
         df = pd.DataFrame.from_dict(dataset)
     ts = TimeSeries.from_dataframe(df, time_col='time_interval', value_cols=['count'])
     
-    #scaler = Scaler()
-    #ts = scaler.fit_transform(ts)
+    scaler = Scaler()
+    ts = scaler.fit_transform(ts)
 
     train, val = ts.split_after(0.8) #80% train, 20% val
     params = dict()

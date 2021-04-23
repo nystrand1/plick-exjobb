@@ -5,7 +5,7 @@ import pickle
 from datetime import datetime
 
 from ..utils.dataset import split_dataset
-from ..regression.linear import get_linear_model
+from ..regression.linear import get_linear_model, generate_linear_series_from_model
 from ..regression.sarima import get_sarima_model
 from ...models.category_trend import CategoryTrend
 from ..regression.tcn import *
@@ -252,6 +252,77 @@ def get_category_time_series_overlapping(db, start_date="2021-01-01", end_date="
         res_arr.append(data)
 
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
+    return res_arr
+
+def get_formatted_category_time_series(db, start_date="2021-01-01", end_date="2021-04-18", trunc_by="day", category_ids=[9,10,11,12]):
+
+    category_counts = ""
+    category_joins = ""
+    category_models = dict()
+    category_tcn_predictions = dict()
+
+    for category_id in category_ids:
+        category_counts += ', sum(coalesce(category_{id}.amount,0))::int as category_{id}_count'.format(id=category_id)
+        category_joins += 'LEFT JOIN plick.category_{id} AS category_{id} on category_{id}.time_interval = series.time_interval '.format(id=category_id)
+        models = db.session.execute("""
+        SELECT model_long, model_short, tcn_prediction
+        FROM plick.category_trends
+        WHERE category_id = :category_id
+        """, {
+            'category_id': category_id
+        })
+        for model in models:
+            category_models[category_id] = model
+            category_tcn_predictions[category_id] = model[2]
+
+    res = db.session.execute("""
+        SELECT to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval
+        {category_counts}
+        FROM (
+        SELECT generate_series(date_trunc('minute', (:start_date)::date),
+        date_trunc('minute', (:end_date)::date + time '23:59:59'),'15 min'::interval) as time_interval
+        ) series
+        {category_joins}
+        GROUP BY date_trunc(:trunc_by,series.time_interval)
+        ORDER BY
+        time_interval ASC
+        """.format(category_counts=category_counts, category_joins=category_joins), {
+        'category_counts': category_counts,
+        'category_joins': category_joins,
+        'trunc_by': trunc_by,
+        'start_date': start_date,
+        'end_date': end_date,
+    })
+
+    linear_datasets = dict()
+
+    for category_id in category_ids:
+        model = category_models[category_id]
+        short = generate_linear_series_from_model(7, model[1]) #week
+        long = generate_linear_series_from_model(res.rowcount, model[0])
+        linear_datasets[category_id] = {
+            'long': long,
+            'short': short,
+        }
+        logging.debug(short)
+        logging.debug(long)
+
+    res_arr = []
+    short_index = 0
+    for i, r in enumerate(res):
+        data = dict(r)
+        for category_id in category_ids:
+            data['trend_long_{}'.format(category_id)] = linear_datasets[category_id]['long'][i]
+            if (i >= res.rowcount - 7):
+                logging.debug(short_index)
+                data['trend_short_{}'.format(category_id)] = linear_datasets[category_id]['short'][short_index]
+                data['tcn_pred_{}'.format(category_id)] = category_tcn_predictions[category_id][short_index]['count']
+        
+        if (i >= res.rowcount - 7):
+            short_index += 1
+        res_arr.append(dict(data))
+    res_arr.reverse()
+    logging.debug(res_arr)
     return res_arr
 
 

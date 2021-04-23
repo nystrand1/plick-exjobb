@@ -48,25 +48,29 @@ db = sa(app)
 CORS(app, resources={r"/*": {"origins": "*"}})
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-@app.route('/arma-regression', methods=['POST'])
+@app.route('/get-brand-timeseries', methods=['POST'])
 @cross_origin()
-def arma_regression():
-    return handle_arma_regression(db)
+def get_brand_timeseries():
+    data = request.json
+    brand_ids = data['brand_ids']
+    res = get_formatted_brand_time_series(db, brand_ids=brand_ids)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/sarma-regression', methods=['POST'])
+@app.route('/get-query-timeseries', methods=['POST'])
 @cross_origin()
-def sarma_regression():
-    return handle_sarma_regression(db)
+def get_query_timeseries():
+    data = request.json
+    query_ids = data['queries']
+    res = get_formatted_query_time_series(db, query_ids=query_ids)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/lstm', methods=['POST'])
+@app.route('/get-category-timeseries', methods=['POST'])
 @cross_origin()
-def lstm():
-    return handle_lstm(db)
-
-@app.route('/auto-sarima', methods=['POST'])
-@cross_origin()
-def auto_arima():
-    return handle_auto_sarima_regression(db)
+def get_category_timeseries():
+    data = request.json
+    category_ids = data['category_ids']
+    res = get_formatted_category_time_series(db, category_ids=category_ids)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/query-candidates', methods=['GET'])
 @cross_origin()

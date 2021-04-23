@@ -5,7 +5,7 @@ import pickle
 from datetime import datetime
 
 from ..utils.dataset import split_dataset
-from ..regression.linear import get_linear_model
+from ..regression.linear import get_linear_model, generate_linear_series_from_model
 from ...models.brand_trend import BrandTrend
 from ..regression.tcn import *
 
@@ -275,6 +275,77 @@ def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="202
         res_arr.append(data)
     
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
+    return res_arr
+
+def get_formatted_brand_time_series(db, start_date="2021-01-01", end_date="2021-04-18", trunc_by="day", brand_ids=[9,10,11,12]):
+
+    brand_counts = ""
+    brand_joins = ""
+    brand_models = dict()
+    brand_tcn_predictions = dict()
+
+    for brand_id in brand_ids:
+        brand_counts += ', sum(coalesce(brand_{id}.amount,0))::int as brand_{id}_count'.format(id=brand_id)
+        brand_joins += 'LEFT JOIN plick.brand_{id} AS brand_{id} on brand_{id}.time_interval = series.time_interval '.format(id=brand_id)
+        models = db.session.execute("""
+        SELECT model_long, model_short, tcn_prediction
+        FROM plick.brand_trends
+        WHERE brand_id = :brand_id
+        """, {
+            'brand_id': brand_id
+        })
+        for model in models:
+            brand_models[brand_id] = model
+            brand_tcn_predictions[brand_id] = model[2]
+
+    res = db.session.execute("""
+        SELECT to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval
+        {brand_counts}
+        FROM (
+        SELECT generate_series(date_trunc('minute', (:start_date)::date),
+        date_trunc('minute', (:end_date)::date + time '23:59:59'),'15 min'::interval) as time_interval
+        ) series
+        {brand_joins}
+        GROUP BY date_trunc(:trunc_by,series.time_interval)
+        ORDER BY
+        time_interval ASC
+        """.format(brand_counts=brand_counts, brand_joins=brand_joins), {
+        'brand_counts': brand_counts,
+        'brand_joins': brand_joins,
+        'trunc_by': trunc_by,
+        'start_date': start_date,
+        'end_date': end_date,
+    })
+
+    linear_datasets = dict()
+
+    for brand_id in brand_ids:
+        model = brand_models[brand_id]
+        short = generate_linear_series_from_model(7, model[1]) #week
+        long = generate_linear_series_from_model(res.rowcount, model[0])
+        linear_datasets[brand_id] = {
+            'long': long,
+            'short': short,
+        }
+        logging.debug(short)
+        logging.debug(long)
+
+    res_arr = []
+    short_index = 0
+    for i, r in enumerate(res):
+        data = dict(r)
+        for brand_id in brand_ids:
+            data['trend_long_{}'.format(brand_id)] = linear_datasets[brand_id]['long'][i]
+            if (i >= res.rowcount - 7):
+                logging.debug(short_index)
+                data['trend_short_{}'.format(brand_id)] = linear_datasets[brand_id]['short'][short_index]
+                data['tcn_pred_{}'.format(brand_id)] = brand_tcn_predictions[brand_id][short_index]['count']
+        
+        if (i >= res.rowcount - 7):
+            short_index += 1
+        res_arr.append(dict(data))
+    res_arr.reverse()
+    logging.debug(res_arr)
     return res_arr
 
 def save_to_db(db, data):
