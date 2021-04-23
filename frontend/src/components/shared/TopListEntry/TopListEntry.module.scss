@@ -30,17 +30,25 @@
     margin-left: $smallMargin;
     text-align: left;
 
-    .query {
-      font-size: 20px;
-      display: inline-block;
+    .queryAndMetric {
+      display: flex;
+      .query {
+        font-size: 20px;
+        display: inline-block;
+      }
+      .metric {
+        font-size: 14px;
+        font-weight: bold;
+        color: $lightText;
+        display: flex;
+        margin-left: $mediumMargin;
+
+        .diffPercentage {
+          margin-left: $smallMargin;
+        }
+      }
     }
-    .metric {
-      font-size: 14px;
-      font-weight: bold;
-      color: $lightText;
-      display: inline-block;
-      margin-left: $mediumMargin;
-    }
+
     .words {
       font-size: 14px;
       padding-right: $mediumMargin;

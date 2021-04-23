@@ -174,17 +174,3 @@ def count_interval_unique_similar(db, query="nike", trunc_by="hour", start_date=
     res_arr.reverse()
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
     return res_arr
-
-def get_query_dataset(db, query): 
-    res = db.session.execute("""
-        SELECT *
-        FROM plick.term_trends
-        WHERE query like :query
-    """, {
-        'query': query
-    })
-    res_arr = []
-    for r in res:
-        res_arr.append(dict(r))
-    res_arr.reverse()
-    return res_arr[0]

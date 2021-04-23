@@ -229,7 +229,7 @@ def get_query_dataset(db, query):
     for r in res:
         res_arr.append(dict(r))
     res_arr.reverse()
-    return res_arr[0]
+    return res_arr
 
 def get_all_query_datasets(db):
     res = db.session.execute("""
