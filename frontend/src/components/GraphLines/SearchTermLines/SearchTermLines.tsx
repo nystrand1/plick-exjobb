@@ -14,7 +14,7 @@ export const SearchTermLines = ({ onClick }: SearchTermLinesProps) => {
   return (
     <>
       {topListSearchTerms?.map((line, i) => {
-        const style = activeLines.includes(line.query)
+        const style = activeLines.includes(i)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (

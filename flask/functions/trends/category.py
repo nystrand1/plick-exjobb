@@ -74,7 +74,7 @@ def get_trending_categories(db, limit=5, k_threshold=0.5):
     (plick.monthly_count_diff(time_series_day))[3] * 100 - 100 as monthly_diff_percentage
     FROM plick.category_trends
     WHERE model_short[1] + :threshold > model_long[1]
-    AND model_short[1] > 1
+    AND model_short[1] > 0
     ORDER BY model_short[1] DESC
     LIMIT :limit
     """, {
@@ -312,8 +312,6 @@ def get_formatted_category_time_series(db, start_date="2021-01-01", end_date="20
                 'long': long,
                 'short': short,
             }
-            logging.debug(short)
-            logging.debug(long)
 
         short_index = 0
         for i, r in enumerate(res):
@@ -321,7 +319,6 @@ def get_formatted_category_time_series(db, start_date="2021-01-01", end_date="20
             for category_id in category_ids:
                 data['trend_long_{}'.format(category_id)] = linear_datasets[category_id]['long'][i]
                 if (i >= res.rowcount - 7):
-                    logging.debug(short_index)
                     data['trend_short_{}'.format(category_id)] = linear_datasets[category_id]['short'][short_index]
                     data['tcn_pred_{}'.format(category_id)] = category_tcn_predictions[category_id][short_index]['count']
             
@@ -329,7 +326,7 @@ def get_formatted_category_time_series(db, start_date="2021-01-01", end_date="20
                 short_index += 1
             res_arr.append(dict(data))
 
-    res_arr.reverse()
+    #res_arr.reverse()
     return res_arr
 
 

@@ -61,7 +61,7 @@ def get_brand_timeseries():
 @cross_origin()
 def get_query_timeseries():
     data = request.json
-    query_ids = data['queries']
+    query_ids = data['query_ids']
     trunc_by = data['resolution']
     res = get_formatted_query_time_series(db, query_ids=query_ids, trunc_by=trunc_by)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")

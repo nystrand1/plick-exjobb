@@ -13,6 +13,7 @@ import {
 import moment from 'moment'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
+import { Api } from '~services'
 import { CustomTooltip } from '../CustomToolTip'
 
 interface LineGraphProps {
@@ -21,40 +22,90 @@ interface LineGraphProps {
 }
 
 export const LineGraph = ({ width, height }: LineGraphProps) => {
-  const { activeLines, timeSeriesSerachTerms, resolution } = useContext()
+  const {
+    activeLines,
+    resolution,
+    topListBrands,
+    topListCategories,
+    activeType,
+    startDate,
+    endDate,
+  } = useContext()
   const [data, setData] = React.useState<ITimeSeriesSearchTerms[]>([])
   const margin = 50
 
   React.useEffect(() => {
-    setData(timeSeriesSerachTerms.filter((data) => activeLines.includes(data.query)))
-  }, [setData, activeLines, timeSeriesSerachTerms])
-
-  const getData = () => {
-    const res: any[] = []
-    data.forEach((entry) => {
-      switch (resolution) {
-        case 'day':
-          res.push(
-            ...entry.time_series_day.map((o) => {
-              let dataPoint = {}
-              dataPoint[`count_${entry.query}`] = o.count
-              dataPoint['time_interval'] = o.time_interval
-              dataPoint['trends'] = o.trends
-              return dataPoint
-            }),
-          )
+    if (activeLines.length > 0) {
+      switch (activeType) {
+        case 'brand':
+          Api.getBrandTimeseries({
+            brand_ids: activeLines,
+            resolution: resolution,
+          }).then((data) => {
+            const startIndex = data.findIndex(
+              (e) => Number(new Date(e.time_interval)) === Number(startDate),
+            )
+            const endIndex =
+              data.findIndex(
+                (e) => Number(new Date(e.time_interval)) === Number(endDate),
+              ) + 1
+            setData(data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length))
+          })
           break
-        case 'week':
-          return entry.time_series_week
-        case 'month':
-          return entry.time_series_month
-      }
-    })
-    console.log(res)
-    return res
-  }
 
-  console.log(data)
+        case 'category':
+          Api.getCategoryTimeseries({
+            category_ids: activeLines,
+            resolution: resolution,
+          }).then((data) => {
+            const startIndex = data.findIndex(
+              (e) => Number(new Date(e.time_interval)) === Number(startDate),
+            )
+            const endIndex =
+              data.findIndex(
+                (e) => Number(new Date(e.time_interval)) === Number(endDate),
+              ) + 1
+            setData(data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length))
+          })
+          break
+
+        case 'query':
+          Api.getQueryTimeseries({
+            query_ids: ['nike'],
+            resolution: resolution,
+          }).then((data) => {
+            const startIndex = data.findIndex(
+              (e) => Number(new Date(e.time_interval)) === Number(startDate),
+            )
+            const endIndex =
+              data.findIndex(
+                (e) => Number(new Date(e.time_interval)) === Number(endDate),
+              ) + 1
+            setData(data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length))
+          })
+          break
+      }
+    }
+  }, [setData, activeLines, resolution, startDate, endDate, activeType])
+
+  React.useEffect(() => {
+    setData([])
+  }, [activeType])
+
+  const getColorIndex = (lineId: number) => {
+    switch (activeType) {
+      case 'brand':
+        return topListBrands?.findIndex((element) => element.brand_id === lineId) || 0
+
+      case 'category':
+        return (
+          topListCategories?.findIndex((element) => element.category_id === lineId) || 0
+        )
+
+      default:
+        return 0
+    }
+  }
 
   const xAxisTickFormatter = (date) => {
     return moment(date, 'YYYY-MM-DD hh:mm:ss').format('YYYY-MM-DD')
@@ -64,12 +115,13 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
     return <div className={s.textWrapper}>Välj i listan för att visa värden</div>
   }
 
+  console.log(data)
   return (
     <div className={s.lineGraphWrapper}>
       <LineChart
         width={width}
         height={height}
-        data={getData()}
+        data={data}
         margin={{ top: margin / 5, right: margin, left: margin / 2, bottom: margin / 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" />
@@ -80,15 +132,18 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
         />
         <YAxis name={'count'} />
         <ZAxis dataKey={'query'} />
-        <Tooltip content={<CustomTooltip tickFormatter={xAxisTickFormatter} />} />
+        <Tooltip />
         <Legend />
-        <Line
-          type="monotone"
-          dataKey="count_ganni"
-          stroke={colors[0]}
-          strokeWidth={3}
-          dot={false}
-        />
+        {activeLines.map((lineId) => (
+          <Line
+            key={lineId}
+            type="monotone"
+            dataKey={`${activeType}_${lineId}_count`}
+            stroke={colors[getColorIndex(lineId)]}
+            strokeWidth={3}
+            dot={false}
+          />
+        ))}
       </LineChart>
     </div>
   )

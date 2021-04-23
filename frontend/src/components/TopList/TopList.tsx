@@ -11,6 +11,7 @@ interface TopListProps {
 export const TopList = ({ type }: TopListProps) => {
   const { topListSearchTerms, topListBrands, topListCategories } = useContext()
   const [time, setTime] = React.useState('1 vecka')
+  const hasMoreToShow = false
   let title = ''
 
   if (type === 'searchTerms') {
@@ -55,77 +56,72 @@ export const TopList = ({ type }: TopListProps) => {
     }
   }
 
+  const renderLoading = () => {
+    return <div className={s.loading}>Laddar...</div>
+  }
+
   const renderTopList = () => {
     switch (type) {
       case 'searchTerms':
         return (
           <>
-            {topListSearchTerms &&
-              topListSearchTerms.map((entry, index) => {
-                const entryDiff = getDiff(entry)
-                return (
-                  <TopListEntry
-                    query={entry.query}
-                    index={index + 1}
-                    key={`${entry.query}_${index}`}
-                    diff={entryDiff?.diff}
-                    diffPercentage={entryDiff?.diffPercentage}
-                    words={entry.similar_queries}
-                  />
-                )
-              })}
+            {topListSearchTerms
+              ? topListSearchTerms.map((entry, index) => {
+                  const entryDiff = getDiff(entry)
+                  return (
+                    <TopListEntry
+                      query={entry.query}
+                      index={index + 1}
+                      key={`${entry.query}_${index}`}
+                      diff={entryDiff?.diff}
+                      diffPercentage={entryDiff?.diffPercentage}
+                      words={entry.similar_queries}
+                    />
+                  )
+                })
+              : renderLoading()}
           </>
         )
       case 'brands':
         return (
           <>
-            {topListBrands &&
-              topListBrands.map((entry, index) => {
-                const entryDiff = getDiff(entry)
-                return (
-                  <TopListEntry
-                    query={entry.brand_name}
-                    index={index + 1}
-                    key={`${entry.brand_name}_${index}`}
-                    diff={entryDiff?.diff}
-                    diffPercentage={entryDiff?.diffPercentage}
-                  />
-                )
-              })}
+            {topListBrands
+              ? topListBrands.map((entry, index) => {
+                  const entryDiff = getDiff(entry)
+                  return (
+                    <TopListEntry
+                      query={entry.brand_name}
+                      index={index + 1}
+                      key={`${entry.brand_name}_${index}`}
+                      diff={entryDiff?.diff}
+                      diffPercentage={entryDiff?.diffPercentage}
+                    />
+                  )
+                })
+              : renderLoading()}
           </>
         )
       case 'categories':
       default:
         return (
           <>
-            {topListCategories &&
-              topListCategories.map((entry, index) => {
-                const entryDiff = getDiff(entry)
-                return (
-                  <TopListEntry
-                    query={entry.category_name}
-                    index={index + 1}
-                    key={`${entry.category_name}_${index}`}
-                    diff={entryDiff?.diff}
-                    diffPercentage={entryDiff?.diffPercentage}
-                  />
-                )
-              })}
+            {topListCategories
+              ? topListCategories.map((entry, index) => {
+                  const entryDiff = getDiff(entry)
+                  return (
+                    <TopListEntry
+                      query={entry.category_name}
+                      index={index + 1}
+                      key={`${entry.category_name}_${index}`}
+                      diff={entryDiff?.diff}
+                      diffPercentage={entryDiff?.diffPercentage}
+                    />
+                  )
+                })
+              : renderLoading()}
           </>
         )
     }
-  }
-
-  if (type === 'searchTerms' && !topListSearchTerms) {
-    return <div>Loading...</div>
-  }
-
-  if (type === 'brands' && !topListBrands) {
-    return <div>Loading...</div>
-  }
-
-  if (type === 'categories' && !topListCategories) {
-    return <div>Loading...</div>
   }
 
   return (
@@ -139,7 +135,7 @@ export const TopList = ({ type }: TopListProps) => {
         <div>
           <div className={s.entries}>{renderTopList()}</div>
         </div>
-        <button className={s.showMoreButton}>Visa top 50</button>
+        {hasMoreToShow && <button className={s.showMoreButton}>Visa top 50</button>}
       </div>
     </div>
   )

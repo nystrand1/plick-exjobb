@@ -47,6 +47,18 @@ export class Api {
     return this.post('query-dataset', data)
   }
 
+  static async getBrandTimeseries(data: IBrandTimeseriesData) {
+    return this.post('get-brand-timeseries', data)
+  }
+
+  static async getCategoryTimeseries(data: ICategoryTimeseriesData) {
+    return this.post('get-category-timeseries', data)
+  }
+
+  static async getQueryTimeseries(data: IQueryTimeseriesData) {
+    return this.post('get-query-timeseries', data)
+  }
+
   static async get(endpoint: string, data = {}) {
     const response = await axios.get(endpoint, data)
     return response.data

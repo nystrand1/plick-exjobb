@@ -14,7 +14,7 @@ export const BrandLines = ({ onClick }: BrandLinesProps) => {
   return (
     <>
       {topListBrands?.map((line, i) => {
-        const style = activeLines.includes(line.brand_name)
+        const style = activeLines.includes(line.brand_id)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (

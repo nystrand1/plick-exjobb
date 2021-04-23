@@ -99,7 +99,7 @@ def get_trending_brands(db, limit=5, k_threshold=0.5):
     (plick.monthly_count_diff(time_series_day))[3] * 100 - 100 as monthly_diff_percentage
     FROM plick.brand_trends
     WHERE model_short[1] + :threshold > model_long[1]
-    AND model_short[1] > 1
+    AND model_short[1] > 0
     ORDER BY model_short[1] DESC
     LIMIT :limit
     """, {
@@ -336,24 +336,19 @@ def get_formatted_brand_time_series(db, start_date="2021-01-01", end_date="2021-
                 'long': long,
                 'short': short,
             }
-            logging.debug(short)
-            logging.debug(long)
-
         short_index = 0
         for i, r in enumerate(res):
             data = dict(r)
             for brand_id in brand_ids:
                 data['trend_long_{}'.format(brand_id)] = linear_datasets[brand_id]['long'][i]
                 if (i >= res.rowcount - 7):
-                    logging.debug(short_index)
                     data['trend_short_{}'.format(brand_id)] = linear_datasets[brand_id]['short'][short_index]
                     data['tcn_pred_{}'.format(brand_id)] = brand_tcn_predictions[brand_id][short_index]['count']
             
             if (i >= res.rowcount - 7):
                 short_index += 1
             res_arr.append(dict(data))
-
-    res_arr.reverse()
+    #res_arr.reverse()
     return res_arr
 
 def save_to_db(db, data):

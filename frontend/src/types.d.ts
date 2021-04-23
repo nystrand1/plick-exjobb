@@ -32,6 +32,21 @@ interface IQueryDatasetData {
   query: string
 }
 
+interface IBrandTimeseriesData {
+  brand_ids: number[]
+  resolution: string
+}
+
+interface ICategoryTimeseriesData {
+  category_ids: number[]
+  resolution: string
+}
+
+interface IQueryTimeseriesData {
+  query_ids: string[]
+  resolution: string
+}
+
 interface IDataPoint {
   count: number
   time_interval: string

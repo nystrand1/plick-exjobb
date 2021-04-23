@@ -14,7 +14,7 @@ export const CategoryLines = ({ onClick }: CategoryLinesProps) => {
   return (
     <>
       {topListCategories?.map((line, i) => {
-        const style = activeLines.includes(line.category_name)
+        const style = activeLines.includes(line.category_id)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (

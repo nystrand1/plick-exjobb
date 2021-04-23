@@ -8,15 +8,15 @@ const useProviderValue = () => {
   const [topListBrands, setTopListBrands] = React.useState<ITopListBrand[]>()
   const [topListCategories, setTopListCategories] = React.useState<ITopListCategory[]>()
   const [query, setQuery] = React.useState('nike')
-  const [startDate, setStartDate] = React.useState(new Date('2021-01-01'))
-  const [endDate, setEndDate] = React.useState(new Date('2021-02-18'))
+  const [startDate, setStartDate] = React.useState(new Date('2021-01-01 00:00:00'))
+  const [endDate, setEndDate] = React.useState(new Date('2021-02-18 00:00:00'))
   const [graphData, setGraphData] = React.useState<IDataSet[]>()
   const [resolution, setResolution] = React.useState('day')
   const [loading, setLoading] = React.useState(true)
-  const [activeLines, setActiveLines] = React.useState<string[]>([])
-  const [activeType, setactiveType] = React.useState<
-    'searchTerms' | 'brands' | 'categories'
-  >('searchTerms')
+  const [activeLines, setActiveLines] = React.useState<number[]>([])
+  const [activeType, setactiveType] = React.useState<'query' | 'brand' | 'category'>(
+    'brand',
+  )
   const [timeSeriesSerachTerms, setTimeSeriesSerachTerms] = React.useState<
     ITimeSeriesSearchTerms[]
   >([])

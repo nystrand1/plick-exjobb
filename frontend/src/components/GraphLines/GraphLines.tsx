@@ -13,14 +13,14 @@ export const GraphLines = () => {
     let id
 
     switch (activeType) {
-      case 'searchTerms':
+      case 'query':
         id = line.query
         break
-      case 'brands':
-        id = line.brand_name
+      case 'brand':
+        id = line.brand_id
         break
-      case 'categories':
-        id = line.category_name
+      case 'category':
+        id = line.category_id
         break
     }
 
@@ -47,9 +47,9 @@ export const GraphLines = () => {
           <div>LÅNGT INTERVALL</div>
         </div>
       </div>
-      {activeType === 'searchTerms' && <SearchTermLines onClick={toggleLine} />}
-      {activeType === 'brands' && <BrandLines onClick={toggleLine} />}
-      {activeType === 'categories' && <CategoryLines onClick={toggleLine} />}
+      {activeType === 'query' && <SearchTermLines onClick={toggleLine} />}
+      {activeType === 'brand' && <BrandLines onClick={toggleLine} />}
+      {activeType === 'category' && <CategoryLines onClick={toggleLine} />}
     </div>
   )
 }

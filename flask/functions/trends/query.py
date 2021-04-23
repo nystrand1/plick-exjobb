@@ -343,8 +343,6 @@ def get_formatted_query_time_series(db, start_date="2021-01-01", end_date="2021-
                 'long': long,
                 'short': short,
             }
-            logging.debug(short)
-            logging.debug(long)
 
         short_index = 0
         for i, r in enumerate(res):
@@ -352,7 +350,6 @@ def get_formatted_query_time_series(db, start_date="2021-01-01", end_date="2021-
             for query_id in query_ids:
                 data['trend_long_{}'.format(query_id)] = linear_datasets[query_id]['long'][i]
                 if (i >= res.rowcount - 7):
-                    logging.debug(short_index)
                     data['trend_short_{}'.format(query_id)] = linear_datasets[query_id]['short'][short_index]
                     data['tcn_pred_{}'.format(query_id)] = query_tcn_predictions[query_id][short_index]['count']
             
@@ -360,7 +357,7 @@ def get_formatted_query_time_series(db, start_date="2021-01-01", end_date="2021-
                 short_index += 1
             res_arr.append(dict(data))
 
-    res_arr.reverse()
+    #res_arr.reverse()
     return res_arr
 
 def save_to_db(db, data):

@@ -46,20 +46,20 @@ export const GraphTool = () => {
         <div className={s.topSection}>
           <div className={s.typeSelection}>
             <LargeButton
-              active={activeType === 'searchTerms'}
-              onClick={() => setactiveType('searchTerms')}
+              active={activeType === 'query'}
+              onClick={() => setactiveType('query')}
             >
               Söktermer
             </LargeButton>
             <LargeButton
-              active={activeType === 'brands'}
-              onClick={() => setactiveType('brands')}
+              active={activeType === 'brand'}
+              onClick={() => setactiveType('brand')}
             >
               Märken
             </LargeButton>
             <LargeButton
-              active={activeType === 'categories'}
-              onClick={() => setactiveType('categories')}
+              active={activeType === 'category'}
+              onClick={() => setactiveType('category')}
             >
               Kategorier
             </LargeButton>
