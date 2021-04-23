@@ -258,22 +258,25 @@ def get_formatted_category_time_series(db, start_date="2021-01-01", end_date="20
 
     category_counts = ""
     category_joins = ""
-    category_models = dict()
-    category_tcn_predictions = dict()
+
+    if(trunc_by == "day"):
+        category_models = dict()
+        category_tcn_predictions = dict()
 
     for category_id in category_ids:
         category_counts += ', sum(coalesce(category_{id}.amount,0))::int as category_{id}_count'.format(id=category_id)
         category_joins += 'LEFT JOIN plick.category_{id} AS category_{id} on category_{id}.time_interval = series.time_interval '.format(id=category_id)
-        models = db.session.execute("""
-        SELECT model_long, model_short, tcn_prediction
-        FROM plick.category_trends
-        WHERE category_id = :category_id
-        """, {
-            'category_id': category_id
-        })
-        for model in models:
-            category_models[category_id] = model
-            category_tcn_predictions[category_id] = model[2]
+        if(trunc_by == "day"):
+            models = db.session.execute("""
+            SELECT model_long, model_short, tcn_prediction
+            FROM plick.category_trends
+            WHERE category_id = :category_id
+            """, {
+                'category_id': category_id
+            })
+            for model in models:
+                category_models[category_id] = model
+                category_tcn_predictions[category_id] = model[2]
 
     res = db.session.execute("""
         SELECT to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval
@@ -293,36 +296,40 @@ def get_formatted_category_time_series(db, start_date="2021-01-01", end_date="20
         'start_date': start_date,
         'end_date': end_date,
     })
-
-    linear_datasets = dict()
-
-    for category_id in category_ids:
-        model = category_models[category_id]
-        short = generate_linear_series_from_model(7, model[1]) #week
-        long = generate_linear_series_from_model(res.rowcount, model[0])
-        linear_datasets[category_id] = {
-            'long': long,
-            'short': short,
-        }
-        logging.debug(short)
-        logging.debug(long)
-
     res_arr = []
-    short_index = 0
-    for i, r in enumerate(res):
-        data = dict(r)
+
+    if(trunc_by != "day"):
+        for r in res:
+            res_arr.append(dict(r))
+    else:
+        linear_datasets = dict()
+
         for category_id in category_ids:
-            data['trend_long_{}'.format(category_id)] = linear_datasets[category_id]['long'][i]
+            model = category_models[category_id]
+            short = generate_linear_series_from_model(7, model[1]) #week
+            long = generate_linear_series_from_model(res.rowcount, model[0])
+            linear_datasets[category_id] = {
+                'long': long,
+                'short': short,
+            }
+            logging.debug(short)
+            logging.debug(long)
+
+        short_index = 0
+        for i, r in enumerate(res):
+            data = dict(r)
+            for category_id in category_ids:
+                data['trend_long_{}'.format(category_id)] = linear_datasets[category_id]['long'][i]
+                if (i >= res.rowcount - 7):
+                    logging.debug(short_index)
+                    data['trend_short_{}'.format(category_id)] = linear_datasets[category_id]['short'][short_index]
+                    data['tcn_pred_{}'.format(category_id)] = category_tcn_predictions[category_id][short_index]['count']
+            
             if (i >= res.rowcount - 7):
-                logging.debug(short_index)
-                data['trend_short_{}'.format(category_id)] = linear_datasets[category_id]['short'][short_index]
-                data['tcn_pred_{}'.format(category_id)] = category_tcn_predictions[category_id][short_index]['count']
-        
-        if (i >= res.rowcount - 7):
-            short_index += 1
-        res_arr.append(dict(data))
+                short_index += 1
+            res_arr.append(dict(data))
+
     res_arr.reverse()
-    logging.debug(res_arr)
     return res_arr
 
 

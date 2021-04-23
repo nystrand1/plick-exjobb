@@ -288,22 +288,26 @@ def get_formatted_query_time_series(db, start_date="2021-01-01", end_date="2021-
 
     query_counts = ""
     query_joins = ""
-    query_models = dict()
-    query_tcn_predictions = dict()
+
+    if(trunc_by == "day"):
+        query_models = dict()
+        query_tcn_predictions = dict()
 
     for query_id in query_ids:
         query_counts += ', sum(coalesce(query_{id}.amount,0))::int as query_{id}_count'.format(id=query_id)
         query_joins += 'LEFT JOIN plick.query_{id} AS query_{id} on query_{id}.time_interval = series.time_interval '.format(id=query_id)
-        models = db.session.execute("""
-        SELECT model_long, model_short, tcn_prediction
-        FROM plick.query_trends
-        WHERE query = :query_id
-        """, {
-            'query_id': query_id
-        })
-        for model in models:
-            query_models[query_id] = model
-            query_tcn_predictions[query_id] = model[2]
+        
+        if(trunc_by == "day"):
+            models = db.session.execute("""
+            SELECT model_long, model_short, tcn_prediction
+            FROM plick.query_trends
+            WHERE query = :query_id
+            """, {
+                'query_id': query_id
+            })
+            for model in models:
+                query_models[query_id] = model
+                query_tcn_predictions[query_id] = model[2]
 
     res = db.session.execute("""
         SELECT to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval
@@ -324,35 +328,39 @@ def get_formatted_query_time_series(db, start_date="2021-01-01", end_date="2021-
         'end_date': end_date,
     })
 
-    linear_datasets = dict()
-
-    for query_id in query_ids:
-        model = query_models[query_id]
-        short = generate_linear_series_from_model(7, model[1]) #week
-        long = generate_linear_series_from_model(res.rowcount, model[0])
-        linear_datasets[query_id] = {
-            'long': long,
-            'short': short,
-        }
-        logging.debug(short)
-        logging.debug(long)
-
     res_arr = []
-    short_index = 0
-    for i, r in enumerate(res):
-        data = dict(r)
+    if(trunc_by != "day"):
+        for r in res:
+            res_arr.append(dict(r))
+    else:
+        linear_datasets = dict()
+
         for query_id in query_ids:
-            data['trend_long_{}'.format(query_id)] = linear_datasets[query_id]['long'][i]
+            model = query_models[query_id]
+            short = generate_linear_series_from_model(7, model[1]) #week
+            long = generate_linear_series_from_model(res.rowcount, model[0])
+            linear_datasets[query_id] = {
+                'long': long,
+                'short': short,
+            }
+            logging.debug(short)
+            logging.debug(long)
+
+        short_index = 0
+        for i, r in enumerate(res):
+            data = dict(r)
+            for query_id in query_ids:
+                data['trend_long_{}'.format(query_id)] = linear_datasets[query_id]['long'][i]
+                if (i >= res.rowcount - 7):
+                    logging.debug(short_index)
+                    data['trend_short_{}'.format(query_id)] = linear_datasets[query_id]['short'][short_index]
+                    data['tcn_pred_{}'.format(query_id)] = query_tcn_predictions[query_id][short_index]['count']
+            
             if (i >= res.rowcount - 7):
-                logging.debug(short_index)
-                data['trend_short_{}'.format(query_id)] = linear_datasets[query_id]['short'][short_index]
-                data['tcn_pred_{}'.format(query_id)] = query_tcn_predictions[query_id][short_index]['count']
-        
-        if (i >= res.rowcount - 7):
-            short_index += 1
-        res_arr.append(dict(data))
+                short_index += 1
+            res_arr.append(dict(data))
+
     res_arr.reverse()
-    logging.debug(res_arr)
     return res_arr
 
 def save_to_db(db, data):

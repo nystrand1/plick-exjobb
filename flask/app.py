@@ -53,7 +53,8 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 def get_brand_timeseries():
     data = request.json
     brand_ids = data['brand_ids']
-    res = get_formatted_brand_time_series(db, brand_ids=brand_ids)
+    trunc_by = data['resolution']
+    res = get_formatted_brand_time_series(db, brand_ids=brand_ids, trunc_by=trunc_by)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/get-query-timeseries', methods=['POST'])
@@ -61,7 +62,8 @@ def get_brand_timeseries():
 def get_query_timeseries():
     data = request.json
     query_ids = data['queries']
-    res = get_formatted_query_time_series(db, query_ids=query_ids)
+    trunc_by = data['resolution']
+    res = get_formatted_query_time_series(db, query_ids=query_ids, trunc_by=trunc_by)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/get-category-timeseries', methods=['POST'])
@@ -69,7 +71,8 @@ def get_query_timeseries():
 def get_category_timeseries():
     data = request.json
     category_ids = data['category_ids']
-    res = get_formatted_category_time_series(db, category_ids=category_ids)
+    trunc_by = data['resolution']
+    res = get_formatted_category_time_series(db, category_ids=category_ids, trunc_by=trunc_by)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/query-candidates', methods=['GET'])
