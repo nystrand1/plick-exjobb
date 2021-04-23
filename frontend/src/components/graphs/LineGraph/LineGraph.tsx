@@ -23,10 +23,13 @@ interface LineGraphProps {
 
 export const LineGraph = ({ width, height }: LineGraphProps) => {
   const {
-    activeLines,
+    activeBrands,
+    activeCategories,
+    activeQueries,
     resolution,
     topListBrands,
     topListCategories,
+    topListQueries,
     activeType,
     startDate,
     endDate,
@@ -34,65 +37,60 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
   const [data, setData] = React.useState<ITimeSeriesSearchTerms[]>([])
   const margin = 50
 
+  const sliceData = React.useCallback(
+    (data) => {
+      const startIndex = data.findIndex(
+        (e) => Number(new Date(e.time_interval)) === Number(startDate),
+      )
+      const endIndex =
+        data.findIndex((e) => Number(new Date(e.time_interval)) === Number(endDate)) + 1
+      return data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length)
+    },
+    [endDate, startDate],
+  )
+
   React.useEffect(() => {
-    if (activeLines.length > 0) {
-      switch (activeType) {
-        case 'brand':
-          Api.getBrandTimeseries({
-            brand_ids: activeLines,
-            resolution: resolution,
-          }).then((data) => {
-            const startIndex = data.findIndex(
-              (e) => Number(new Date(e.time_interval)) === Number(startDate),
-            )
-            const endIndex =
-              data.findIndex(
-                (e) => Number(new Date(e.time_interval)) === Number(endDate),
-              ) + 1
-            setData(data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length))
-          })
-          break
+    switch (activeType) {
+      case 'brand':
+        Api.getBrandTimeseries({
+          brand_ids: activeBrands,
+          resolution: resolution,
+        }).then((data) => {
+          setData(sliceData(data))
+        })
+        break
 
-        case 'category':
-          Api.getCategoryTimeseries({
-            category_ids: activeLines,
-            resolution: resolution,
-          }).then((data) => {
-            const startIndex = data.findIndex(
-              (e) => Number(new Date(e.time_interval)) === Number(startDate),
-            )
-            const endIndex =
-              data.findIndex(
-                (e) => Number(new Date(e.time_interval)) === Number(endDate),
-              ) + 1
-            setData(data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length))
-          })
-          break
+      case 'category':
+        Api.getCategoryTimeseries({
+          category_ids: activeCategories,
+          resolution: resolution,
+        }).then((data) => {
+          setData(sliceData(data))
+        })
+        break
 
-        case 'query':
-          Api.getQueryTimeseries({
-            query_ids: ['nike'],
-            resolution: resolution,
-          }).then((data) => {
-            const startIndex = data.findIndex(
-              (e) => Number(new Date(e.time_interval)) === Number(startDate),
-            )
-            const endIndex =
-              data.findIndex(
-                (e) => Number(new Date(e.time_interval)) === Number(endDate),
-              ) + 1
-            setData(data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length))
-          })
-          break
-      }
+      case 'query':
+        Api.getQueryTimeseries({
+          query_ids: activeQueries,
+          resolution: resolution,
+        }).then((data) => {
+          setData(sliceData(data))
+        })
+        break
     }
-  }, [setData, activeLines, resolution, startDate, endDate, activeType])
+  }, [
+    setData,
+    activeBrands,
+    activeCategories,
+    activeQueries,
+    resolution,
+    startDate,
+    endDate,
+    activeType,
+    sliceData,
+  ])
 
-  React.useEffect(() => {
-    setData([])
-  }, [activeType])
-
-  const getColorIndex = (lineId: number) => {
+  const getColorIndex = (lineId) => {
     switch (activeType) {
       case 'brand':
         return topListBrands?.findIndex((element) => element.brand_id === lineId) || 0
@@ -102,8 +100,23 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
           topListCategories?.findIndex((element) => element.category_id === lineId) || 0
         )
 
+      case 'query':
+        return topListQueries?.findIndex((element) => element.query === lineId) || 0
+
       default:
         return 0
+    }
+  }
+
+  const getActiveLines = () => {
+    switch (activeType) {
+      case 'brand':
+        return activeBrands
+      case 'category':
+        return activeCategories
+      case 'query':
+      default:
+        return activeQueries
     }
   }
 
@@ -115,7 +128,6 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
     return <div className={s.textWrapper}>Välj i listan för att visa värden</div>
   }
 
-  console.log(data)
   return (
     <div className={s.lineGraphWrapper}>
       <LineChart
@@ -134,7 +146,7 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
         <ZAxis dataKey={'query'} />
         <Tooltip />
         <Legend />
-        {activeLines.map((lineId) => (
+        {(getActiveLines() as Array<string | number>).map((lineId: string | number) => (
           <Line
             key={lineId}
             type="monotone"

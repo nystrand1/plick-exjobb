@@ -3,18 +3,17 @@ import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
 import { ReactComponent as DownArrow } from '~static/svg/down-arrow.svg'
-import { ReactComponent as MoreIcon } from '~static/svg/more.svg'
 
-interface SearchTermLinesProps {
+interface QueryLinesProps {
   onClick: (line: any) => void
 }
 
-export const SearchTermLines = ({ onClick }: SearchTermLinesProps) => {
-  const { topListSearchTerms, activeLines } = useContext()
+export const QueryLines = ({ onClick }: QueryLinesProps) => {
+  const { topListQueries, activeQueries } = useContext()
   return (
     <>
-      {topListSearchTerms?.map((line, i) => {
-        const style = activeLines.includes(i)
+      {topListQueries?.map((line, i) => {
+        const style = activeQueries.includes(line.query)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (

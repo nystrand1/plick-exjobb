@@ -3,18 +3,17 @@ import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
 import { ReactComponent as DownArrow } from '~static/svg/down-arrow.svg'
-import { ReactComponent as MoreIcon } from '~static/svg/more.svg'
 
 interface CategoryLinesProps {
   onClick: (line: any) => void
 }
 
 export const CategoryLines = ({ onClick }: CategoryLinesProps) => {
-  const { topListCategories, activeLines } = useContext()
+  const { topListCategories, activeCategories } = useContext()
   return (
     <>
       {topListCategories?.map((line, i) => {
-        const style = activeLines.includes(line.category_id)
+        const style = activeCategories.includes(line.category_id)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (

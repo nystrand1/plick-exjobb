@@ -3,18 +3,17 @@ import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
 import { ReactComponent as DownArrow } from '~static/svg/down-arrow.svg'
-import { ReactComponent as MoreIcon } from '~static/svg/more.svg'
 
 interface BrandLinesProps {
   onClick: (line: any) => void
 }
 
 export const BrandLines = ({ onClick }: BrandLinesProps) => {
-  const { topListBrands, activeLines } = useContext()
+  const { topListBrands, activeBrands } = useContext()
   return (
     <>
       {topListBrands?.map((line, i) => {
-        const style = activeLines.includes(line.brand_id)
+        const style = activeBrands.includes(line.brand_id)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (
