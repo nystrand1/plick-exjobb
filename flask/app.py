@@ -10,12 +10,15 @@ from flask import Flask, request, Response
 from flask_sqlalchemy import SQLAlchemy as sa
 from flask_sqlalchemy import Model
 from flask_cors import CORS, cross_origin
-from flask_caching import Cache
 from http import HTTPStatus
 
 import multiprocessing
 from joblib import Parallel
 from joblib import delayed
+
+from darts import TimeSeries
+from darts.models import AutoARIMA
+from darts.models import TCNModel
 
 from .models.search_record import SearchRecord
 from .models.brand_trend import *
@@ -26,13 +29,12 @@ from .functions.trends.brand import *
 from .functions.trends.category import *
 from .functions.trends.query import *
 
-from .functions.utils.sanitizer import *
+#from .functions.utils.sanitizer import *
 from .functions.count_interval import *
 from .functions.regression.linear import *
-from .functions.regression.arma import handle_arma_regression
-from .functions.regression.sarma import handle_sarma_regression
-from .functions.regression.lstm import handle_lstm
-from .functions.regression.auto_sarima import handle_auto_sarima_regression
+from .functions.regression.sarima import *
+from .functions.regression.lstm import *
+from .functions.regression.tcn import *
 from .functions.utils.dataset import *
 from .functions.process_queries import *
 from .functions.utils.plick import *
@@ -46,34 +48,29 @@ db = sa(app)
 CORS(app, resources={r"/*": {"origins": "*"}})
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
-@app.route('/linear-regression', methods=['POST'])
+@app.route('/get-brand-timeseries', methods=['POST'])
 @cross_origin()
-def linear_regression():
-    inputs = LinearRegressionInputs(request)
-    if not inputs.validate():
-        return Response(json.dumps(inputs.errors), status=HTTPStatus.BAD_REQUEST, content_type="application/json")
-    res = handle_linear_regression(db)
+def get_brand_timeseries():
+    data = request.json
+    brand_ids = data['brand_ids']
+    res = get_formatted_brand_time_series(db, brand_ids=brand_ids)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/arma-regression', methods=['POST'])
+@app.route('/get-query-timeseries', methods=['POST'])
 @cross_origin()
-def arma_regression():
-    return handle_arma_regression(db)
+def get_query_timeseries():
+    data = request.json
+    query_ids = data['queries']
+    res = get_formatted_query_time_series(db, query_ids=query_ids)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/sarma-regression', methods=['POST'])
+@app.route('/get-category-timeseries', methods=['POST'])
 @cross_origin()
-def sarma_regression():
-    return handle_sarma_regression(db)
-
-@app.route('/lstm', methods=['POST'])
-@cross_origin()
-def lstm():
-    return handle_lstm(db)
-
-@app.route('/auto-sarima', methods=['POST'])
-@cross_origin()
-def auto_arima():
-    return handle_auto_sarima_regression(db)
+def get_category_timeseries():
+    data = request.json
+    category_ids = data['category_ids']
+    res = get_formatted_category_time_series(db, category_ids=category_ids)
+    return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/query-candidates', methods=['GET'])
 @cross_origin()
@@ -104,6 +101,17 @@ def generate_trend_data():
     res = generate_brand_datasets(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+@app.route('/generate-tcn-models', methods=['GET'])
+@cross_origin()
+def generate_tcn_models():
+    logging.debug("GENERATING QUERY TCN MODELS")
+    generate_query_tcn_models(db)
+    logging.debug("GENERATING CATEGORY TCN MODELS")
+    #generate_category_tcn_models(db)
+    logging.debug("GENERATING BRAND TCN MODELS")
+    #generate_brand_tcn_models(db)
+    return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
+
 @app.route('/sarima-test', methods=['GET'])
 @cross_origin()
 def sarima_test():
@@ -115,6 +123,26 @@ def sarima_test():
     logging.debug(model.summary())
     return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
 
+@app.route('/tcn-test', methods=['GET'])
+@cross_origin()
+def tcn_test():
+    param_dict = dict()
+    for i in range(1, 21):
+        dataset = get_category_dataset(db, i)
+        logging.debug(dataset['time_series_day'])
+        ts = dataset['time_series_day']
+        if(dataset['model_tcn'] is None):
+            model = get_tcn_model(dataset=ts)
+            param_dict[i] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_tcn'])
+        predictions = get_tcn_predictions(model)
+        store_tcn_model(db, pickle.dumps(model), trend_type="category", id=i)
+        store_tcn_prediction(db, prediction=predictions, id=i)
+
+    logging.debug(param_dict)
+    return Response(json.dumps(predictions), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-words', methods=['POST'])
 @cross_origin()
@@ -149,3 +177,40 @@ def query_dataset():
     data = request.json
     res = get_query_dataset(db, data['query'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/darts-test', methods=['GET'])
+@cross_origin()
+def darts_test():
+    dataset = get_brand_dataset(db, 5)
+    logging.debug(dataset['time_series_day'])
+    dataset = dataset['time_series_day']
+    test = pd.DataFrame.from_dict(dataset)
+    test.to_csv('./functions/regression/mk_day.csv')
+    # ts = TimeSeries.from_dataframe(test, time_col='time_interval', value_cols=['count'])
+    
+    # latest_date = datetime.strptime(dataset[-1]['time_interval'], '%Y-%m-%d %H:%M:%S')
+    # split_date = latest_date - timedelta(days=15)
+
+    # train, val = ts.split_after(pd.Timestamp(split_date))
+    # logging.debug(ts)
+    # logging.debug(train)
+    
+    # tcn = TCNModel(
+    #     input_chunk_length=(24*14) + 1,
+    #     output_chunk_length=24*14,
+    #     n_epochs=400,
+    #     dropout=0.1,
+    #     dilation_base=2,
+    #     weight_norm=True,
+    #     kernel_size=5,
+    #     num_filters=3,
+    #     random_state=0
+    # )
+    # tcn.fit(ts)
+    # logging.debug(tcn.predict(1))
+    # arima = AutoARIMA()
+    # arima.fit(series=ts)
+    # logging.debug(arima.model.summary())
+    # logging.debug(ts)
+    # logging.debug(arima.predict(1))
+    return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")

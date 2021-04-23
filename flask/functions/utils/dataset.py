@@ -41,3 +41,14 @@ def split_dataset(dataset):
     res['mid'] = dataset[mid_index:]
     res['short'] = dataset[short_index:]
     return res
+
+def to_dataset(dates, counts):
+    res_arr = list()
+    for i in range(len(dates)):
+        entry = dict()
+        date = dates[i].replace("T", " ")
+        date = date.replace("Z", "")
+        entry['time_interval'] = date
+        entry['count'] = int(counts[i][0])
+        res_arr.append(entry)
+    return res_arr

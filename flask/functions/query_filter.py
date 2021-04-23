@@ -13,7 +13,7 @@ def get_query_candidates(db, seperate_brand_categories = False):
         LEFT JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
         WHERE LENGTH(query) > 1
         AND
-        record.created_at > '2021-03-15'::date - interval '7 day'
+        record.created_at > '2021-04-18'::date - interval '7 day'
         GROUP BY query, cat.name, brand.name
         HAVING count(query) > 100
         ORDER BY amount DESC
@@ -24,7 +24,7 @@ def get_query_candidates(db, seperate_brand_categories = False):
         FROM plick.search_record
         WHERE LENGTH(query) > 1
         AND
-        created_at > '2021-03-15'::date - interval '7 day'
+        created_at > '2021-04-18'::date - interval '7 day'
         GROUP BY query
         HAVING count(query) > 300
         ORDER BY amount DESC

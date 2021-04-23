@@ -1,11 +1,13 @@
 import logging
 import redis
 import json
+import pickle
 from datetime import datetime
 
 from ..utils.dataset import split_dataset
-from ..regression.linear import get_linear_model
+from ..regression.linear import get_linear_model, generate_linear_series_from_model
 from ...models.brand_trend import BrandTrend
+from ..regression.tcn import *
 
 cache = redis.Redis(host='redis', port=6379)
 
@@ -19,7 +21,7 @@ def get_brand_candidates(db):
         SELECT count(DISTINCT record.id) as count, brand.id, brand.name
         FROM plick.search_record_processed as record
         INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
-        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        WHERE record.created_at > '2021-04-18'::date - interval '7 day'
         GROUP BY brand.id
         HAVING count(DISTINCT record.id) > 1000
         ORDER BY count(DISTINCT record.id) DESC
@@ -42,7 +44,7 @@ def get_popular_categories_in_brands(db, brand_ids):
         FROM plick.search_record_processed as record
         INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
         INNER JOIN plick.categories as category on category.id = ANY(record.category_ids)
-        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        WHERE record.created_at > '2021-04-18'::date - interval '7 day'
         AND :brand_ids && record.brand_ids
         GROUP BY brand.name, brand.id, category.name
         ORDER BY count(DISTINCT record.id) DESC
@@ -65,7 +67,7 @@ def get_popular_words_in_brands(db, brand_ids):
     SELECT count(DISTINCT record.id) as count, brand.name, query_processed as words, query
         FROM plick.search_record_processed as record
         INNER JOIN plick.brands as brand on brand.id = ANY(record.brand_ids)
-        WHERE record.created_at > '2021-03-15'::date - interval '7 day'
+        WHERE record.created_at > '2021-04-18'::date - interval '7 day'
         AND :brand_ids && record.brand_ids
         AND query_processed is not null
         GROUP BY brand.name, record.query_processed, query
@@ -120,19 +122,45 @@ def get_trending_brands(db, limit=5, k_threshold=0.5):
         res_arr.append(data)
     return res_arr 
 
-def get_brand_dataset(db, brand): 
+def get_brand_dataset(db, brand_id): 
     res = db.session.execute("""
         SELECT *
         FROM plick.brand_trends
-        WHERE brand like :brand
+        WHERE brand_id = :brand_id
     """, {
-        'brand': brand
+        'brand_id': brand_id
     })
     res_arr = []
     for r in res:
         res_arr.append(dict(r))
     res_arr.reverse()
     return res_arr[0]
+
+def get_all_brand_datasets(db):
+    res = db.session.execute("""
+        SELECT brand_id, brand_name, model_tcn, model_lstm, model_sarima, time_series_day
+        FROM plick.brand_trends
+    """)
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+    res_arr.reverse()
+    return res_arr
+
+def generate_brand_tcn_models(db):
+    param_dict = dict()
+    datasets = get_all_brand_datasets(db)
+    for dataset in datasets:
+        ts = dataset['time_series_day']
+        if(dataset['model_tcn'] is None):
+            model = get_tcn_model(dataset=ts)
+            param_dict[dataset['brand_name']] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_tcn'])
+        predictions = get_tcn_predictions(model)
+        store_tcn_model(db, pickle.dumps(model), trend_type="brand", id=dataset['brand_id'])
+        store_tcn_prediction(db, prediction=predictions, trend_type="brand", id=dataset['brand_id'])
 
 def generate_brand_datasets(db):
     CACHE_KEY = "_BRANDS"
@@ -147,7 +175,7 @@ def generate_brand_datasets(db):
 def generate_brand_dataset(db, brand):
     data = dict()
     data['start_date'] = "2021-01-01"
-    data['end_date'] = "2021-03-15"
+    data['end_date'] = "2021-04-18"
     data['brand_id'] = brand['id']
     data['trunc_by'] = "minute"
     generate_brand_time_series(db, brand['id'])
@@ -196,7 +224,7 @@ def generate_brand_time_series(db, brand_id=11):
 		INNER JOIN plick.categories as cat on cat.id = ANY(record.brand_ids)
         WHERE record.brand_ids && ARRAY[:brand_id]
 		AND
-        record.created_at BETWEEN '2021-01-01'::date AND '2021-03-15'::date + interval '1 day'
+        record.created_at BETWEEN '2021-01-01'::date AND '2021-04-18'::date + interval '1 day'
         GROUP BY floor(extract('epoch' from record.created_at) / (60*15));
 
         CREATE UNIQUE INDEX IF NOT EXISTS time_series_interval_brand_{}
@@ -205,7 +233,7 @@ def generate_brand_time_series(db, brand_id=11):
         'brand_id': brand_id
     })
 
-def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="2021-03-15", trunc_by="day", brand_id=10):
+def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="2021-04-18", trunc_by="day", brand_id=10):
     
     CACHE_KEY = "_BRAND_TIME_SERIES_OVERLAPPING_{}_{}".format(brand_id, trunc_by)
 
@@ -247,6 +275,77 @@ def get_brand_time_series_overlapping(db, start_date="2021-01-01", end_date="202
         res_arr.append(data)
     
     cache.set(CACHE_KEY, json.dumps(res_arr), 300)
+    return res_arr
+
+def get_formatted_brand_time_series(db, start_date="2021-01-01", end_date="2021-04-18", trunc_by="day", brand_ids=[9,10,11,12]):
+
+    brand_counts = ""
+    brand_joins = ""
+    brand_models = dict()
+    brand_tcn_predictions = dict()
+
+    for brand_id in brand_ids:
+        brand_counts += ', sum(coalesce(brand_{id}.amount,0))::int as brand_{id}_count'.format(id=brand_id)
+        brand_joins += 'LEFT JOIN plick.brand_{id} AS brand_{id} on brand_{id}.time_interval = series.time_interval '.format(id=brand_id)
+        models = db.session.execute("""
+        SELECT model_long, model_short, tcn_prediction
+        FROM plick.brand_trends
+        WHERE brand_id = :brand_id
+        """, {
+            'brand_id': brand_id
+        })
+        for model in models:
+            brand_models[brand_id] = model
+            brand_tcn_predictions[brand_id] = model[2]
+
+    res = db.session.execute("""
+        SELECT to_char(date_trunc(:trunc_by,series.time_interval), 'YYYY-MM-DD HH24:MI:SS') as time_interval
+        {brand_counts}
+        FROM (
+        SELECT generate_series(date_trunc('minute', (:start_date)::date),
+        date_trunc('minute', (:end_date)::date + time '23:59:59'),'15 min'::interval) as time_interval
+        ) series
+        {brand_joins}
+        GROUP BY date_trunc(:trunc_by,series.time_interval)
+        ORDER BY
+        time_interval ASC
+        """.format(brand_counts=brand_counts, brand_joins=brand_joins), {
+        'brand_counts': brand_counts,
+        'brand_joins': brand_joins,
+        'trunc_by': trunc_by,
+        'start_date': start_date,
+        'end_date': end_date,
+    })
+
+    linear_datasets = dict()
+
+    for brand_id in brand_ids:
+        model = brand_models[brand_id]
+        short = generate_linear_series_from_model(7, model[1]) #week
+        long = generate_linear_series_from_model(res.rowcount, model[0])
+        linear_datasets[brand_id] = {
+            'long': long,
+            'short': short,
+        }
+        logging.debug(short)
+        logging.debug(long)
+
+    res_arr = []
+    short_index = 0
+    for i, r in enumerate(res):
+        data = dict(r)
+        for brand_id in brand_ids:
+            data['trend_long_{}'.format(brand_id)] = linear_datasets[brand_id]['long'][i]
+            if (i >= res.rowcount - 7):
+                logging.debug(short_index)
+                data['trend_short_{}'.format(brand_id)] = linear_datasets[brand_id]['short'][short_index]
+                data['tcn_pred_{}'.format(brand_id)] = brand_tcn_predictions[brand_id][short_index]['count']
+        
+        if (i >= res.rowcount - 7):
+            short_index += 1
+        res_arr.append(dict(data))
+    res_arr.reverse()
+    logging.debug(res_arr)
     return res_arr
 
 def save_to_db(db, data):

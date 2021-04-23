@@ -5,3 +5,8 @@
 .eslintcache
 /db/*
 /flask/__pycache__/*
+*.csv
+*.pth.tar
+*.sql
+*.zip
+*.json
