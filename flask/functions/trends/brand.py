@@ -135,7 +135,7 @@ def get_brand_dataset(db, brand_id):
         res_arr.append(dict(r))
     res_arr.reverse()
     return res_arr[0]
-
+    
 def get_all_brand_datasets(db):
     res = db.session.execute("""
         SELECT brand_id, brand_name, model_tcn, model_lstm, model_sarima, time_series_day
@@ -147,12 +147,12 @@ def get_all_brand_datasets(db):
     res_arr.reverse()
     return res_arr
 
-def generate_brand_tcn_models(db):
+def generate_brand_tcn_models(db, regenerate = False):
     param_dict = dict()
     datasets = get_all_brand_datasets(db)
     for dataset in datasets:
         ts = dataset['time_series_day']
-        if(dataset['model_tcn'] is None):
+        if(dataset['model_tcn'] is None or regenerate is True):
             model = get_tcn_model(dataset=ts)
             param_dict[dataset['brand_name']] = model[1]
             model = model[0]

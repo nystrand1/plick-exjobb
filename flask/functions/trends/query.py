@@ -119,12 +119,12 @@ def get_trending_words(db, limit=5, k_threshold=0):
         res_arr.append(tmp)
     return res_arr 
 
-def generate_query_tcn_models(db):
+def generate_query_tcn_models(db, regenerate = False):
     param_dict = dict()
     datasets = get_all_query_datasets(db)
     for dataset in datasets:
         ts = dataset['time_series_day']
-        if(dataset['model_tcn'] is None):
+        if(dataset['model_tcn'] is None or regenerate is True):
             model = get_tcn_model(dataset=ts)
             param_dict[dataset['query']] = model[1]
             model = model[0]

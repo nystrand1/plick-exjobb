@@ -108,12 +108,35 @@ def generate_trend_data():
 @cross_origin()
 def generate_tcn_models():
     logging.debug("GENERATING QUERY TCN MODELS")
-    generate_query_tcn_models(db)
+    #generate_query_tcn_models(db, regenerate=True)
     logging.debug("GENERATING CATEGORY TCN MODELS")
-    #generate_category_tcn_models(db)
+    generate_category_tcn_models(db, regenerate=True)
     logging.debug("GENERATING BRAND TCN MODELS")
-    #generate_brand_tcn_models(db)
+    #generate_brand_tcn_models(db, regenerate=True)
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/generate-lstm-models', methods=['GET'])
+@cross_origin()
+def generate_lstm_models():
+    logging.debug("GENERATING QUERY LSTM MODELS")
+    #generate_query_LSTM_models(db, regenerate=True)
+    logging.debug("GENERATING CATEGORY LSTM MODELS")
+    generate_category_lstm_models(db, regenerate=True)
+    logging.debug("GENERATING BRAND LSTM MODELS")
+    #generate_brand_LSTM_models(db, regenerate=True)
+    return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/generate-sarima-models', methods=['GET'])
+@cross_origin()
+def generate_sarima_models():
+    logging.debug("GENERATING QUERY SAIMRA MODELS")
+    #generate_query_SAIMRA_models(db, regenerate=True)
+    logging.debug("GENERATING CATEGORY SAIMRA MODELS")
+    generate_category_sarima_models(db, regenerate=True)
+    logging.debug("GENERATING BRAND SARIMA MODELS")
+    #generate_brand_SARIMA_models(db, regenerate=True)
+    return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/sarima-test', methods=['GET'])
 @cross_origin()
@@ -194,14 +217,35 @@ def brand_dataset():
     res = get_brand_dataset(db, data['brand'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+@app.route('/eval-lstm', methods=['GET'])
+@cross_origin()
+def eval_sarima():
+    brands = get_all_brand_datasets(db)
+    categories = get_all_category_datasets(db)
+    queries = get_all_query_datasets(db)
+    scores = eval_all_sarima_models(db, categories, brands, queries)
+    return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
+
+@app.route('/eval-lstm', methods=['GET'])
+@cross_origin()
+def eval_lstm():
+    brands = get_all_brand_datasets(db)
+    categories = get_all_category_datasets(db)
+    queries = get_all_query_datasets(db)
+    
+    scores = eval_all_lstm_models(db, categories, brands, queries)
+    
+    return Response(json.dumps(mean_scores), status=HTTPStatus.OK, content_type="application/json")
+
 @app.route('/darts-test', methods=['GET'])
 @cross_origin()
 def darts_test():
-    dataset = get_brand_dataset(db, 5)
+    dataset = get_brand_dataset(db, 151)
     logging.debug(dataset['time_series_day'])
     dataset = dataset['time_series_day']
     test = pd.DataFrame.from_dict(dataset)
-    test.to_csv('./functions/regression/mk_day.csv')
+    test.to_csv('./functions/regression/zadig_day.csv')
     # ts = TimeSeries.from_dataframe(test, time_col='time_interval', value_cols=['count'])
     
     # latest_date = datetime.strptime(dataset[-1]['time_interval'], '%Y-%m-%d %H:%M:%S')
@@ -211,7 +255,7 @@ def darts_test():
     # logging.debug(ts)
     # logging.debug(train)
     
-    # tcn = TCNModel(
+    # lstm = TCNModel(
     #     input_chunk_length=(24*14) + 1,
     #     output_chunk_length=24*14,
     #     n_epochs=400,
