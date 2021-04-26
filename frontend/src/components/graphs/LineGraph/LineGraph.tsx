@@ -52,30 +52,36 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
   React.useEffect(() => {
     switch (activeType) {
       case 'brand':
-        Api.getBrandTimeseries({
-          brand_ids: activeBrands,
-          resolution: resolution,
-        }).then((data) => {
-          setData(sliceData(data))
-        })
+        if (activeBrands.length > 0) {
+          Api.getBrandTimeseries({
+            brand_ids: activeBrands,
+            resolution: resolution,
+          }).then((data) => {
+            setData(sliceData(data))
+          })
+        }
         break
 
       case 'category':
-        Api.getCategoryTimeseries({
-          category_ids: activeCategories,
-          resolution: resolution,
-        }).then((data) => {
-          setData(sliceData(data))
-        })
+        if (activeCategories.length > 0) {
+          Api.getCategoryTimeseries({
+            category_ids: activeCategories,
+            resolution: resolution,
+          }).then((data) => {
+            setData(sliceData(data))
+          })
+        }
         break
 
       case 'query':
-        Api.getQueryTimeseries({
-          query_ids: activeQueries,
-          resolution: resolution,
-        }).then((data) => {
-          setData(sliceData(data))
-        })
+        if (activeQueries.length > 0) {
+          Api.getQueryTimeseries({
+            query_ids: activeQueries,
+            resolution: resolution,
+          }).then((data) => {
+            setData(sliceData(data))
+          })
+        }
         break
     }
   }, [
@@ -124,10 +130,6 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
     return moment(date, 'YYYY-MM-DD hh:mm:ss').format('YYYY-MM-DD')
   }
 
-  if (data.length < 1) {
-    return <div className={s.textWrapper}>Välj i listan för att visa värden</div>
-  }
-
   return (
     <div className={s.lineGraphWrapper}>
       <LineChart
@@ -145,7 +147,7 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
         <YAxis name={'count'} />
         <ZAxis dataKey={'query'} />
         <Tooltip />
-        <Legend />
+        <Legend payload={[{ value: 'item name', type: 'line', id: 'ID01' }]} />
         {(getActiveLines() as Array<string | number>).map((lineId: string | number) => (
           <Line
             key={lineId}

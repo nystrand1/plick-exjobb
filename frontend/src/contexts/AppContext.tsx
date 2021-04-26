@@ -11,15 +11,15 @@ const useProviderValue = () => {
   const [topListCategories, setTopListCategories] = React.useState<ITopListCategory[]>()
 
   const [startDate, setStartDate] = React.useState(new Date('2021-01-01 00:00:00'))
-  const [endDate, setEndDate] = React.useState(new Date('2021-02-18 00:00:00'))
-  const [resolution, setResolution] = React.useState('day')
+  const [endDate, setEndDate] = React.useState(new Date())
+  const [resolution, setResolution] = React.useState('week')
 
   const [activeBrands, setActiveBrands] = React.useState<number[]>([])
   const [activeCategories, setActiveCategories] = React.useState<number[]>([])
   const [activeQueries, setActiveQueries] = React.useState<string[]>([])
 
   const [activeType, setactiveType] = React.useState<'query' | 'brand' | 'category'>(
-    'brand',
+    'query',
   )
 
   const value = React.useMemo(

@@ -2,7 +2,7 @@ import * as React from 'react'
 import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
-import { ReactComponent as DownArrow } from '~static/svg/down-arrow.svg'
+import { ReactComponent as ShowMore } from '~static/svg/add.svg'
 
 interface BrandLinesProps {
   onClick: (line: any) => void
@@ -19,7 +19,7 @@ export const BrandLines = ({ onClick }: BrandLinesProps) => {
         return (
           <div className={s.line} style={style} key={line.brand_id}>
             <button className={s.button} onClick={() => console.log('open')}>
-              <DownArrow />
+              <ShowMore />
             </button>
             <div className={s.content} onClick={() => onClick(line)}>
               <div className={s.title}>{line.brand_name}</div>
