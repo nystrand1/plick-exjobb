@@ -15,7 +15,6 @@ export const GraphTool = () => {
     setStartDate,
     setEndDate,
     setResolution,
-    setActiveLines,
     setactiveType,
   } = useContext()
   const options = ['hour', 'day', 'week', 'month']
@@ -28,10 +27,6 @@ export const GraphTool = () => {
       window.removeEventListener('resize', setSize)
     }
   }, [])
-
-  React.useEffect(() => {
-    setActiveLines([])
-  }, [activeType, setActiveLines])
 
   const setSize = () => {
     if (graphRef.current) {

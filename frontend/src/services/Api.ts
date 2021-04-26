@@ -27,7 +27,7 @@ export class Api {
     return this.post('auto-sarima', data)
   }
 
-  static async trendingSearchTerms(data?: ITrendingRequestData) {
+  static async trendingQueries(data?: ITrendingRequestData) {
     return this.post('trending-words', data)
   }
 

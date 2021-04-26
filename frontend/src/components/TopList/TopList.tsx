@@ -9,7 +9,7 @@ interface TopListProps {
 }
 
 export const TopList = ({ type }: TopListProps) => {
-  const { topListSearchTerms, topListBrands, topListCategories } = useContext()
+  const { topListQueries, topListBrands, topListCategories } = useContext()
   const [time, setTime] = React.useState('1 vecka')
   const hasMoreToShow = false
   let title = ''
@@ -65,8 +65,8 @@ export const TopList = ({ type }: TopListProps) => {
       case 'searchTerms':
         return (
           <>
-            {topListSearchTerms
-              ? topListSearchTerms.map((entry, index) => {
+            {topListQueries
+              ? topListQueries.map((entry, index) => {
                   const entryDiff = getDiff(entry)
                   return (
                     <TopListEntry

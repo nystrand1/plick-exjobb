@@ -2,25 +2,24 @@ import * as React from 'react'
 import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
-import { ReactComponent as DownArrow } from '~static/svg/down-arrow.svg'
-import { ReactComponent as MoreIcon } from '~static/svg/more.svg'
+import { ReactComponent as ShowMore } from '~static/svg/add.svg'
 
-interface SearchTermLinesProps {
+interface QueryLinesProps {
   onClick: (line: any) => void
 }
 
-export const SearchTermLines = ({ onClick }: SearchTermLinesProps) => {
-  const { topListSearchTerms, activeLines } = useContext()
+export const QueryLines = ({ onClick }: QueryLinesProps) => {
+  const { topListQueries, activeQueries } = useContext()
   return (
     <>
-      {topListSearchTerms?.map((line, i) => {
-        const style = activeLines.includes(i)
+      {topListQueries?.map((line, i) => {
+        const style = activeQueries.includes(line.query)
           ? { borderColor: colors[i % colors.length] }
           : {}
         return (
           <div className={s.line} style={style} key={line.query}>
             <button className={s.button} onClick={() => console.log('open')}>
-              <DownArrow />
+              <ShowMore />
             </button>
             <div className={s.content} onClick={() => onClick(line)}>
               <div className={s.title}>{line.query}</div>

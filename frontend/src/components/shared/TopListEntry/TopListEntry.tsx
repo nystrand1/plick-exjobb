@@ -55,10 +55,7 @@ export const TopListEntry = ({
           )}
         </div>
       </div>
-      <div className={s.imageWrapper}>
-        <img src={image || Loading} alt={query} className={s.image} />
-        <ShowMore className={s.showMore} />
-      </div>
+      <img src={image || Loading} alt={query} className={s.image} />
     </button>
   )
 }

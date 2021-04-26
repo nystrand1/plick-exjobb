@@ -56,17 +56,9 @@
   }
 }
 
-.imageWrapper {
-  min-width: 115px;
-
-  .image {
-    object-fit: cover;
-    width: 86px;
-    height: 86px;
-    border-radius: $borderRadiusSmall;
-  }
-
-  .showMore {
-    transform: translate(50%, 0);
-  }
+.image {
+  object-fit: cover;
+  width: 86px;
+  height: 86px;
+  border-radius: $borderRadiusSmall;
 }
