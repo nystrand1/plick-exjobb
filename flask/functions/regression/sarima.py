@@ -21,7 +21,7 @@ from ..utils.dataset import to_dataset
 
 def get_sarima_model(dataset=None, plot=False, verbose=False):
     if(dataset is None):
-        df = pd.read_csv("nike.csv")
+        df = pd.read_csv("jeans_day.csv")
     else:
         df = pd.DataFrame.from_dict(dataset)
 
@@ -41,7 +41,7 @@ def get_sarima_model(dataset=None, plot=False, verbose=False):
     logging.debug("CHOSEN PARAMETERS:")
     params = sarima[1]
     sarima_model = sarima[0]
-    sarima_model.fit(series=ts)
+    sarima_model.fit(series=train)
     print(params)
     if(plot):
         backtest = sarima_model.historical_forecasts(
@@ -65,28 +65,37 @@ def get_sarima_model(dataset=None, plot=False, verbose=False):
         return [sarima_model, params]
 
 
-def eval_all_sarima_models(db, categories, brands, queries):
+def eval_all_sarima_models(db, categories, brands, queries, regenerate = False):
     scores = list() 
     for brand in brands:
-        score = eval_sarima_model(brand['model_sarima'], brand['time_series_day'])
-        score['topic'] = brand['brand_name']
-        score['topic_id'] = brand['brand_id']
-        store_sarima_score(db, score=score, trend_type="brand", id=brand['brand_id'])
-        scores.append(score)
+        if 'sarima_metrics' in brand and regenerate is False:
+            scores.append(brand['sarima_metrics'])
+        else:
+            score = eval_sarima_model(brand['model_sarima'], brand['time_series_day'])
+            score['topic'] = brand['brand_name']
+            score['topic_id'] = brand['brand_id']
+            store_sarima_score(db, score=score, trend_type="brand", id=brand['brand_id'])
+            scores.append(score)
 
     for category in categories:
-        score = eval_sarima_model(category['model_sarima'], category['time_series_day'])
-        score['topic'] = category['category_name']
-        score['topic_id'] = category['category_id']
-        store_sarima_score(db, score=score, trend_type="category", id=category['category_id'])
-        scores.append(score)
+        if 'sarima_metrics' in category and regenerate is False:
+            scores.append(category['sarima_metrics'])
+        else:
+            score = eval_sarima_model(category['model_sarima'], category['time_series_day'])
+            score['topic'] = category['category_name']
+            score['topic_id'] = category['category_id']
+            store_sarima_score(db, score=score, trend_type="category", id=category['category_id'])
+            scores.append(score)
 
     for query in queries:
-        score = eval_sarima_model(query['model_sarima'], query['time_series_day'])
-        score['topic'] = query['query']
-        score['topic_id'] = query['query']
-        store_sarima_score(db, score=score, trend_type="query", id=query['query'])
-        scores.append(score)
+        if 'sarima_metrics' in query and regenerate is False:
+            scores.append(query['sarima_metrics'])
+        else:
+            score = eval_sarima_model(query['model_sarima'], query['time_series_day'])
+            score['topic'] = query['query']
+            score['topic_id'] = query['query']
+            store_sarima_score(db, score=score, trend_type="query", id=query['query'])
+            scores.append(score)
 
     mean_scores = dict()
 
@@ -95,6 +104,7 @@ def eval_all_sarima_models(db, categories, brands, queries):
     r2_sum = 0
     mase_sum = 0
     mae_sum = 0
+    rmse_sum = 0
 
     for score in scores:
         try:
@@ -105,42 +115,59 @@ def eval_all_sarima_models(db, categories, brands, queries):
         r2_sum += float(score['r2'])
         mase_sum += float(score['mase_score'])
         mae_sum += float(score['mae_score'])
+        rmse_sum += float(score['rmse_score'])
 
     mean_scores['r2'] = r2_sum/len(scores)
     mean_scores['mape'] = mape_sum/mape_count
     mean_scores['mase'] = mase_sum/len(scores)
     mean_scores['mae'] = mae_sum/len(scores)
+    mean_scores['rmse'] = rmse_sum/len(scores)
     mean_scores['mape_count'] = mape_count
+    mean_scores['total'] = len(scores)
 
     return mean_scores
 
+
+def get_sarima_backtest(serialized_model, dataset):
+    df = pd.DataFrame.from_dict(dataset)
+    
+    ts = TimeSeries.from_dataframe(
+        df, time_col='time_interval', value_cols=['count'])
+    train, val = ts.split_after(0.8) #80% train, 20% val
+    sarima_model = pickle.loads(serialized_model)
+    sarima_model.fit(train)
+    backtest = sarima_model.predict(len(val))
+    backtest.plot(label='SARIMA Model', lw=3)
 
 def eval_sarima_model(serialized_model, dataset):
     sarima_model = pickle.loads(serialized_model)
     df = pd.DataFrame.from_dict(dataset)
     ts = TimeSeries.from_dataframe(df, time_col='time_interval', value_cols=['count'])
     train, val = ts.split_after(0.8) #80% train, 20% val
-    sarima_model.fit(train)
+
     no_retrain = sarima_model.predict(len(val))
-    backtest = sarima_model.historical_forecasts(
-            series=ts,
-            start=0.8,
-            forecast_horizon=1,
-            stride=1,
-    )
+    # backtest = sarima_model.historical_forecasts(
+    #         series=ts,
+    #         start=0.8,
+    #         forecast_horizon=1,
+    #         stride=1,
+    # )
     scores = dict()
-    scores['retrained']['r2'] = r2_score(val, backtest[1:])
-    scores['retrained']['mase_score'] = mase(val, backtest[1:], train)
-    scores['retrained']['mae_score'] = mae(val, backtest[1:])
-    scores['not_retrained']['r2'] = r2_score(val, no_retrain)
-    scores['not_retrained']['mase_score'] = mase(val, no_retrain, train)
-    scores['not_retrained']['mae_score'] = mae(val, no_retrain)
+    scores['retrained'] = dict()
+    scores['not_retrained'] = dict()
+    # scores['retrained']['r2'] = r2_score(val, backtest[1:])
+    # scores['retrained']['mase_score'] = mase(val, backtest[1:], train)
+    # scores['retrained']['mae_score'] = mae(val, backtest[1:])
+    scores['r2'] = r2_score(val, no_retrain)
+    scores['mase_score'] = mase(val, no_retrain, train)
+    scores['mae_score'] = mae(val, no_retrain)
+    scores['rmse_score'] = np.sqrt(mse(val, no_retrain))
     try:
-        scores['retrained']['mape_score'] = mape(val, backtest[1:])
-        scores['not_retrained']['mape_score'] = mape(val, no_retrain)
+        #scores['retrained']['mape_score'] = mape(val, backtest[1:])
+        scores['mape_score'] = mape(val, no_retrain)
     except:
-        scores['retrained']['mape_score'] = "Could not be calculated (Zero value in time series)"
-        scores['not_retrained']['mape_score'] = "Could not be calculated (Zero value in time series)"
+        #scores['retrained']['mape_score'] = "Could not be calculated (Zero value in time series)"
+        scores['mape_score'] = "Could not be calculated (Zero value in time series)"
     return scores
 
 
@@ -195,7 +222,6 @@ def store_sarima_score(db, score = None, trend_type="category", id=12):
     else:
         logging.debug("what")
     db.session.commit()
-
 
 if __name__ == '__main__':
     print("hello")

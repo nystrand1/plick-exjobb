@@ -8,6 +8,8 @@ from ..utils.dataset import split_dataset
 from ..regression.linear import get_linear_model, generate_linear_series_from_model
 from ...models.brand_trend import BrandTrend
 from ..regression.tcn import *
+from ..regression.lstm import *
+from ..regression.sarima import *
 
 cache = redis.Redis(host='redis', port=6379)
 
@@ -138,7 +140,7 @@ def get_brand_dataset(db, brand_id):
     
 def get_all_brand_datasets(db):
     res = db.session.execute("""
-        SELECT brand_id, brand_name, model_tcn, model_lstm, model_sarima, time_series_day
+        SELECT brand_id, brand_name, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics
         FROM plick.brand_trends
     """)
     res_arr = []
@@ -146,6 +148,33 @@ def get_all_brand_datasets(db):
         res_arr.append(dict(r))
     res_arr.reverse()
     return res_arr
+
+def get_brand_model_scores(db):
+    res = db.session.execute("""
+        SELECT brand_id, brand_name, tcn_metrics, lstm_metrics, sarima_metrics
+        FROM plick.brand_trends
+    """)
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+    res_arr.reverse()
+    return res_arr
+
+def generate_brand_sarima_models(db, regenerate = False):
+    param_dict = dict()
+    datasets = get_all_brand_datasets(db)
+    for dataset in datasets:
+        ts = dataset['time_series_day']
+        if(dataset['model_sarima'] is None or regenerate is True):
+            model = get_sarima_model(dataset=ts)
+            param_dict[dataset['brand_name']] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_sarima'])
+        predictions = get_sarima_predictions(model)
+        store_sarima_model(db, pickle.dumps(model), trend_type="brand", id=dataset['brand_id'])
+        store_sarima_prediction(db, prediction=predictions, trend_type="brand", id=dataset['brand_id'])
+
 
 def generate_brand_tcn_models(db, regenerate = False):
     param_dict = dict()
@@ -158,9 +187,25 @@ def generate_brand_tcn_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_tcn'])
-        predictions = get_tcn_predictions(model)
+        predictions = get_tcn_predictions(model, ts)
         store_tcn_model(db, pickle.dumps(model), trend_type="brand", id=dataset['brand_id'])
         store_tcn_prediction(db, prediction=predictions, trend_type="brand", id=dataset['brand_id'])
+
+def generate_brand_lstm_models(db, regenerate = False):
+    param_dict = dict()
+    datasets = get_all_brand_datasets(db)
+    for dataset in datasets:
+        ts = dataset['time_series_day']
+        if(dataset['model_lstm'] is None or regenerate is True):
+            model = get_lstm_model(dataset=ts)
+            param_dict[dataset['brand_name']] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_lstm'])
+        predictions = get_lstm_predictions(model, ts)
+        store_lstm_model(db, pickle.dumps(model), trend_type="brand", id=dataset['brand_id'])
+        store_lstm_prediction(db, prediction=predictions, trend_type="brand", id=dataset['brand_id'])
+
 
 def generate_brand_datasets(db):
     CACHE_KEY = "_BRANDS"

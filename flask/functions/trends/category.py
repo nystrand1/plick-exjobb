@@ -126,7 +126,7 @@ def generate_category_tcn_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_tcn'])
-        predictions = get_tcn_predictions(model)
+        predictions = get_tcn_predictions(model, ts)
         store_tcn_model(db, pickle.dumps(model), trend_type="category", id=dataset['category_id'])
         store_tcn_prediction(db, prediction=predictions, trend_type="category", id=dataset['category_id'])
 
@@ -148,7 +148,7 @@ def generate_category_lstm_models(db, regenerate = False):
 
 def get_all_category_datasets(db):
     res = db.session.execute("""
-        SELECT category_id, category_name, model_tcn, model_lstm, model_sarima, time_series_day
+        SELECT category_id, category_name, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics
         FROM plick.category_trends
     """)
     res_arr = []

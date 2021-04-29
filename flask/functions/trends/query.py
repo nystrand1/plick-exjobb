@@ -8,6 +8,9 @@ from ..utils.dataset import split_dataset
 from ..regression.linear import get_linear_model, generate_linear_series_from_model
 from ...models.query_trend import QueryTrend
 from ..regression.tcn import *
+from ..regression.lstm import *
+from ..regression.sarima import *
+
 cache = redis.Redis(host='redis', port=6379)
 
 def get_query_candidates(db, seperate_query_categories = False):
@@ -119,6 +122,22 @@ def get_trending_words(db, limit=5, k_threshold=0):
         res_arr.append(tmp)
     return res_arr 
 
+def generate_query_sarima_models(db, regenerate = False):
+    param_dict = dict()
+    datasets = get_all_query_datasets(db)
+    for dataset in datasets:
+        ts = dataset['time_series_day']
+        if(dataset['model_sarima'] is None or regenerate is True):
+            model = get_sarima_model(dataset=ts)
+            param_dict[dataset['query']] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_sarima'])
+        predictions = get_sarima_predictions(model)
+        store_sarima_model(db, pickle.dumps(model), trend_type="query", id=dataset['query'])
+        store_sarima_prediction(db, prediction=predictions, trend_type="query", id=dataset['query'])
+
+
 def generate_query_tcn_models(db, regenerate = False):
     param_dict = dict()
     datasets = get_all_query_datasets(db)
@@ -130,9 +149,25 @@ def generate_query_tcn_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_tcn'])
-        predictions = get_tcn_predictions(model)
+        predictions = get_tcn_predictions(model, ts)
         store_tcn_model(db, pickle.dumps(model), trend_type="query", id=dataset['query'])
         store_tcn_prediction(db, prediction=predictions, trend_type="query", id=dataset['query'])
+
+def generate_query_lstm_models(db, regenerate = False):
+    param_dict = dict()
+    datasets = get_all_query_datasets(db)
+    for dataset in datasets:
+        ts = dataset['time_series_day']
+        if(dataset['model_lstm'] is None or regenerate is True):
+            model = get_lstm_model(dataset=ts)
+            param_dict[dataset['query']] = model[1]
+            model = model[0]
+        else:
+            model = pickle.loads(dataset['model_lstm'])
+        predictions = get_lstm_predictions(model, ts)
+        store_lstm_model(db, pickle.dumps(model), trend_type="query", id=dataset['query'])
+        store_lstm_prediction(db, prediction=predictions, trend_type="query", id=dataset['query'])
+
 
 def generate_query_datasets(db):
     CACHE_KEY = "_QUERY_CANDIDATES"
@@ -233,7 +268,7 @@ def get_query_dataset(db, query):
 
 def get_all_query_datasets(db):
     res = db.session.execute("""
-        SELECT query, model_tcn, model_lstm, model_sarima, time_series_day
+        SELECT query, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics
         FROM plick.query_trends
     """)
     res_arr = []

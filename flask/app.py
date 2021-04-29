@@ -12,9 +12,7 @@ from flask_sqlalchemy import Model
 from flask_cors import CORS, cross_origin
 from http import HTTPStatus
 
-import multiprocessing
-from joblib import Parallel
-from joblib import delayed
+import matplotlib.pyplot as plt
 
 from darts import TimeSeries
 from darts.models import AutoARIMA
@@ -108,33 +106,33 @@ def generate_trend_data():
 @cross_origin()
 def generate_tcn_models():
     logging.debug("GENERATING QUERY TCN MODELS")
-    #generate_query_tcn_models(db, regenerate=True)
+    generate_query_tcn_models(db, regenerate=True)
     logging.debug("GENERATING CATEGORY TCN MODELS")
-    generate_category_tcn_models(db, regenerate=True)
+    #generate_category_tcn_models(db, regenerate=True)
     logging.debug("GENERATING BRAND TCN MODELS")
-    #generate_brand_tcn_models(db, regenerate=True)
+    generate_brand_tcn_models(db, regenerate=True)
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/generate-lstm-models', methods=['GET'])
 @cross_origin()
 def generate_lstm_models():
     logging.debug("GENERATING QUERY LSTM MODELS")
-    #generate_query_LSTM_models(db, regenerate=True)
+    generate_query_lstm_models(db)
     logging.debug("GENERATING CATEGORY LSTM MODELS")
-    generate_category_lstm_models(db, regenerate=True)
+    generate_category_lstm_models(db)
     logging.debug("GENERATING BRAND LSTM MODELS")
-    #generate_brand_LSTM_models(db, regenerate=True)
+    generate_brand_lstm_models(db)
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/generate-sarima-models', methods=['GET'])
 @cross_origin()
 def generate_sarima_models():
     logging.debug("GENERATING QUERY SAIMRA MODELS")
-    #generate_query_SAIMRA_models(db, regenerate=True)
+    generate_query_sarima_models(db)
     logging.debug("GENERATING CATEGORY SAIMRA MODELS")
-    generate_category_sarima_models(db, regenerate=True)
+    generate_category_sarima_models(db)
     logging.debug("GENERATING BRAND SARIMA MODELS")
-    #generate_brand_SARIMA_models(db, regenerate=True)
+    generate_brand_sarima_models(db)
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
 
@@ -163,7 +161,7 @@ def tcn_test():
             model = model[0]
         else:
             model = pickle.loads(dataset['model_tcn'])
-        predictions = get_tcn_predictions(model)
+        predictions = get_tcn_predictions(model, ts)
         store_tcn_model(db, pickle.dumps(model), trend_type="category", id=i)
         store_tcn_prediction(db, prediction=predictions, id=i)
 
@@ -217,7 +215,7 @@ def brand_dataset():
     res = get_brand_dataset(db, data['brand'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/eval-lstm', methods=['GET'])
+@app.route('/eval-sarima', methods=['GET'])
 @cross_origin()
 def eval_sarima():
     brands = get_all_brand_datasets(db)
@@ -236,41 +234,79 @@ def eval_lstm():
     
     scores = eval_all_lstm_models(db, categories, brands, queries)
     
-    return Response(json.dumps(mean_scores), status=HTTPStatus.OK, content_type="application/json")
+    return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
+
+@app.route('/eval-tcn', methods=['GET'])
+@cross_origin()
+def eval_tcn():
+    brands = get_all_brand_datasets(db)
+    categories = get_all_category_datasets(db)
+    queries = get_all_query_datasets(db)
+    
+    scores = eval_all_tcn_models(db, categories, brands, queries)
+    
+    return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/darts-test', methods=['GET'])
 @cross_origin()
 def darts_test():
-    dataset = get_brand_dataset(db, 151)
+    dataset = get_category_dataset(db, 6)
     logging.debug(dataset['time_series_day'])
     dataset = dataset['time_series_day']
     test = pd.DataFrame.from_dict(dataset)
-    test.to_csv('./functions/regression/zadig_day.csv')
-    # ts = TimeSeries.from_dataframe(test, time_col='time_interval', value_cols=['count'])
-    
-    # latest_date = datetime.strptime(dataset[-1]['time_interval'], '%Y-%m-%d %H:%M:%S')
-    # split_date = latest_date - timedelta(days=15)
-
-    # train, val = ts.split_after(pd.Timestamp(split_date))
-    # logging.debug(ts)
-    # logging.debug(train)
-    
-    # lstm = TCNModel(
-    #     input_chunk_length=(24*14) + 1,
-    #     output_chunk_length=24*14,
-    #     n_epochs=400,
-    #     dropout=0.1,
-    #     dilation_base=2,
-    #     weight_norm=True,
-    #     kernel_size=5,
-    #     num_filters=3,
-    #     random_state=0
-    # )
-    # tcn.fit(ts)
-    # logging.debug(tcn.predict(1))
-    # arima = AutoARIMA()
-    # arima.fit(series=ts)
-    # logging.debug(arima.model.summary())
-    # logging.debug(ts)
-    # logging.debug(arima.predict(1))
+    test.to_csv('./functions/regression/jeans_day.csv')
     return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/eval-brands', methods=['GET'])
+@cross_origin()
+def eval_brands():
+    scores = get_brand_model_scores(db)
+    return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/graphs', methods=['GET'])
+@cross_origin()
+def get_graphs():
+    brands = get_all_brand_datasets(db)
+    for brand in brands:
+        dataset = brand['time_series_day']
+        serialized_model_tcn = brand['model_tcn']
+        serialized_model_lstm = brand['model_lstm']
+        serialized_model_sarima = brand['model_sarima']
+        name = brand['brand_name']
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_sarima_backtest(serialized_model_sarima, dataset)
+        plt.legend()
+        plt.savefig("graphs/brands/{}.png".format(name))
+        plt.clf()
+
+    categories = get_all_category_datasets(db)
+    for category in categories:
+        dataset = category['time_series_day']
+        serialized_model_tcn = category['model_tcn']
+        serialized_model_lstm = category['model_lstm']
+        serialized_model_sarima = category['model_sarima']
+        name = category['category_name']
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_sarima_backtest(serialized_model_sarima, dataset)
+        plt.legend()
+        plt.savefig("graphs/categories/{}.png".format(name))
+        plt.clf()
+
+    queries = get_all_query_datasets(db)
+    for query in queries:
+        dataset = query['time_series_day']
+        serialized_model_tcn = query['model_tcn']
+        serialized_model_lstm = query['model_lstm']
+        serialized_model_sarima = query['model_sarima']
+        name = "Query: '{}'".format(query['query'])
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_sarima_backtest(serialized_model_sarima, dataset)
+        plt.legend()
+        plt.savefig("graphs/queries/{}.png".format(query['query']))
+        plt.clf()
+
+    return "success"
