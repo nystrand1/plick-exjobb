@@ -12,7 +12,9 @@ from ..utils.generator import *
 from ..utils.dataset import *
 from ..utils.plick import *
 from ..query_filter import *
-from ...models import *
+from ...models.brand_trend import BrandTrend
+from ...models.category_trend import CategoryTrend
+from ...models.query_trend import QueryTrend
 
 
 def handle_linear_regression(db):
@@ -59,16 +61,15 @@ def get_model_score(combined_dataset, trend_key):
     score = r2_score(y, y_pred)
     return score
 
-
-def save_to_db(db, data):
-    TermTrend().create()
-    record = db.session.query(TermTrend).get(data['query'])
-    if(record is not None):
-        record.model_long = data['model_long']
-        record.model_mid = data['model_mid']
-        record.model_short = data['model_short']
-        record.similar_queries = data['similar_queries']
-        record.updated_at = data['updated_at']
+def save_future_model(db, future_model, trend_type = "category", id = 0):
+    if(trend_type=="category"):
+        record = db.session.query(CategoryTrend).filter_by(category_id=id).first()
+    elif(trend_type=="brand"):
+        record = db.session.query(BrandTrend).filter_by(brand_id=id).first()
     else:
-        record = TermTrend(**data)
-        db.session.add(record)
+        record = db.session.query(QueryTrend).filter_by(query=id).first()
+    if(record is not None):
+        record.future_model = future_model
+    else:
+        logging.debug("what")
+    db.session.commit()

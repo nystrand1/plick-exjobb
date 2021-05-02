@@ -63,6 +63,41 @@ def get_popular_words_in_categorys(db, category_ids):
 
     return res_arr
 
+def get_future_trending_categories(db, limit=5, k_threshold=0.5):
+    res = db.session.execute("""
+    SELECT category_name, category_id, future_model, model_long,
+    future_model[1] as k_short,
+    model_long[1] as k_long,
+    ABS(future_model[1]/model_long[1])*100 as k_val_diff_percent,
+    future_model[1]-model_long[1] as k_val_diff,
+    (plick.weekly_count_diff(time_series_day))[1] - (plick.weekly_count_diff(time_series_day))[2] as weekly_diff,
+    (plick.weekly_count_diff(time_series_day))[3] * 100 - 100 as weekly_diff_percentage,
+    (plick.monthly_count_diff(time_series_day))[1] - (plick.monthly_count_diff(time_series_day))[2] as monthly_diff,
+    (plick.monthly_count_diff(time_series_day))[3] * 100 - 100 as monthly_diff_percentage
+    FROM plick.category_trends
+    WHERE future_model[1] + :threshold > model_long[1]
+    AND future_model[1] > 1
+    ORDER BY future_model[1] DESC
+    LIMIT :limit
+    """, {
+        'limit': limit,
+        'threshold': k_threshold
+    })
+
+    res_arr = []
+
+    for r in res:
+        data = dict()
+        data['category_id'] = r['category_id']
+        data['category_name'] = r['category_name']
+        data['model_long'] = r['model_long']
+        data['model_short'] = r['model_short']
+        data['weekly_diff'] = int(r['weekly_diff'])
+        data['weekly_diff_percentage'] = float(r['weekly_diff_percentage'])
+        data['monthly_diff'] = int(r['monthly_diff'])
+        data['monthly_diff_percentage'] = float(r['monthly_diff_percentage'])
+        res_arr.append(data)
+    return res_arr 
 def get_trending_categories(db, limit=5, k_threshold=0.5):
     res = db.session.execute("""
     SELECT category_name, category_id, model_short, model_long,
@@ -110,8 +145,8 @@ def generate_category_sarima_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_sarima'])
-        predictions = get_sarima_predictions(model)
         store_sarima_model(db, pickle.dumps(model), trend_type="category", id=dataset['category_id'])
+        predictions = get_sarima_predictions(model, ts)
         store_sarima_prediction(db, prediction=predictions, trend_type="category", id=dataset['category_id'])
 
 
@@ -126,8 +161,8 @@ def generate_category_tcn_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_tcn'])
-        predictions = get_tcn_predictions(model, ts)
         store_tcn_model(db, pickle.dumps(model), trend_type="category", id=dataset['category_id'])
+        predictions = get_tcn_predictions(model, ts)
         store_tcn_prediction(db, prediction=predictions, trend_type="category", id=dataset['category_id'])
 
 def generate_category_lstm_models(db, regenerate = False):
@@ -141,14 +176,14 @@ def generate_category_lstm_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_lstm'])
-        predictions = get_lstm_predictions(model, ts)
         store_lstm_model(db, pickle.dumps(model), trend_type="category", id=dataset['category_id'])
+        predictions = get_lstm_predictions(model, ts)
         store_lstm_prediction(db, prediction=predictions, trend_type="category", id=dataset['category_id'])
 
 
 def get_all_category_datasets(db):
     res = db.session.execute("""
-        SELECT category_id, category_name, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics
+        SELECT category_id, category_name, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics, tcn_prediction
         FROM plick.category_trends
     """)
     res_arr = []

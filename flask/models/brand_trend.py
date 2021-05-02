@@ -10,6 +10,7 @@ class BrandTrend(db.Model):
     model_short = db.Column(db.ARRAY(db.Float))
     model_mid = db.Column(db.ARRAY(db.Float))
     model_long = db.Column(db.ARRAY(db.Float))
+    future_model = db.Column(db.ARRAY(db.Float))
     model_sarima = db.Column(db.LargeBinary)    
     model_lstm = db.Column(db.LargeBinary)
     model_tcn = db.Column(db.LargeBinary)

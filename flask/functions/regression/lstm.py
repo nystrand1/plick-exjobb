@@ -7,10 +7,10 @@ import pickle
 import warnings
 import matplotlib.pyplot as plt
 
-# from ...models.brand_trend import BrandTrend
-# from ...models.category_trend import CategoryTrend
-# from ...models.query_trend import QueryTrend
-# from ..utils.dataset import to_dataset
+from ...models.brand_trend import BrandTrend
+from ...models.category_trend import CategoryTrend
+from ...models.query_trend import QueryTrend
+from ..utils.dataset import to_dataset
 
 
 from darts import TimeSeries
@@ -45,7 +45,7 @@ def get_lstm_model(dataset=None, plot=False, verbose=False):
     params['output_chunk_length'] = [1]
     params['n_epochs'] = [100]
     params['dropout'] = [0]
-    params['batch_size'] = [4, 6, 8]
+    params['batch_size'] = [4, 6]
     params['random_state'] = [0, 1]
     params['loss_fn'] = [MSELoss()]
 
@@ -166,13 +166,21 @@ def eval_all_lstm_models(db, categories, brands, queries, regenerate = False):
     mape_sum = 0
     mape_count = 0
     r2_sum = 0
+    r2_sum_norm = 0
     mase_sum = 0
+    mase_sum_norm = 0
     mae_sum = 0
+    mae_sum_norm = 0
     rmse_sum = 0
+    rmse_sum_norm = 0
 
     for score in scores:
         try:
             mape_sum += float(score['mape_score'])
+            r2_sum_norm += float(score['r2'])
+            mase_sum_norm += float(score['mase_score'])
+            mae_sum_norm += float(score['mae_score'])
+            rmse_sum_norm += float(score['rmse_score'])
             mape_count += 1
         except:
             pass
@@ -186,6 +194,10 @@ def eval_all_lstm_models(db, categories, brands, queries, regenerate = False):
     mean_scores['mase'] = mase_sum/len(scores)
     mean_scores['mae'] = mae_sum/len(scores)
     mean_scores['rmse'] = rmse_sum/len(scores)
+    mean_scores['rmse_norm'] = rmse_sum_norm/mape_count
+    mean_scores['mase_norm'] = mase_sum_norm/mape_count
+    mean_scores['mae_norm'] = mae_sum_norm/mape_count
+    mean_scores['r2_norm'] = r2_sum_norm/mape_count
     mean_scores['mape_count'] = mape_count
     mean_scores['total'] = len(scores)
 

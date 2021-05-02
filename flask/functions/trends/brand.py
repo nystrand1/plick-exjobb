@@ -140,7 +140,7 @@ def get_brand_dataset(db, brand_id):
     
 def get_all_brand_datasets(db):
     res = db.session.execute("""
-        SELECT brand_id, brand_name, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics
+        SELECT brand_id, brand_name, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics, tcn_prediction
         FROM plick.brand_trends
     """)
     res_arr = []
@@ -171,8 +171,8 @@ def generate_brand_sarima_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_sarima'])
-        predictions = get_sarima_predictions(model)
         store_sarima_model(db, pickle.dumps(model), trend_type="brand", id=dataset['brand_id'])
+        predictions = get_sarima_predictions(model, ts)
         store_sarima_prediction(db, prediction=predictions, trend_type="brand", id=dataset['brand_id'])
 
 
@@ -187,8 +187,8 @@ def generate_brand_tcn_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_tcn'])
-        predictions = get_tcn_predictions(model, ts)
         store_tcn_model(db, pickle.dumps(model), trend_type="brand", id=dataset['brand_id'])
+        predictions = get_tcn_predictions(model, ts)
         store_tcn_prediction(db, prediction=predictions, trend_type="brand", id=dataset['brand_id'])
 
 def generate_brand_lstm_models(db, regenerate = False):
@@ -202,8 +202,8 @@ def generate_brand_lstm_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_lstm'])
-        predictions = get_lstm_predictions(model, ts)
         store_lstm_model(db, pickle.dumps(model), trend_type="brand", id=dataset['brand_id'])
+        predictions = get_lstm_predictions(model, ts)
         store_lstm_prediction(db, prediction=predictions, trend_type="brand", id=dataset['brand_id'])
 
 

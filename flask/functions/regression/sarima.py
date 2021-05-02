@@ -44,19 +44,13 @@ def get_sarima_model(dataset=None, plot=False, verbose=False):
     sarima_model.fit(series=train)
     print(params)
     if(plot):
-        backtest = sarima_model.historical_forecasts(
-            series=ts,
-            start=0.8,
-            forecast_horizon=1,
-            stride=1,
-            verbose=verbose
-        )
+        backtest = sarima_model.predict(len(val))
         print(val)
         print(backtest)
-        print("R2: {}".format(r2_score(val, backtest[1:], intersect=False)))
-        print("MAPE: {}".format(mape(val, backtest[1:])))
-        print("MASE: {}".format(mase(val, backtest[1:], train)))
-        print("MAE: {}".format(mae(val, backtest[1:])))
+        print("R2: {}".format(r2_score(val, backtest, intersect=False)))
+        print("MAPE: {}".format(mape(val, backtest)))
+        print("MASE: {}".format(mase(val, backtest, train)))
+        print("MAE: {}".format(mae(val, backtest)))
         backtest.plot(label='backtest')
         ts.plot(label='actual')
         plt.legend()
@@ -102,13 +96,21 @@ def eval_all_sarima_models(db, categories, brands, queries, regenerate = False):
     mape_sum = 0
     mape_count = 0
     r2_sum = 0
+    r2_sum_norm = 0
     mase_sum = 0
+    mase_sum_norm = 0
     mae_sum = 0
+    mae_sum_norm = 0
     rmse_sum = 0
+    rmse_sum_norm = 0
 
     for score in scores:
         try:
             mape_sum += float(score['mape_score'])
+            r2_sum_norm += float(score['r2'])
+            mase_sum_norm += float(score['mase_score'])
+            mae_sum_norm += float(score['mae_score'])
+            rmse_sum_norm += float(score['rmse_score'])
             mape_count += 1
         except:
             pass
@@ -122,6 +124,10 @@ def eval_all_sarima_models(db, categories, brands, queries, regenerate = False):
     mean_scores['mase'] = mase_sum/len(scores)
     mean_scores['mae'] = mae_sum/len(scores)
     mean_scores['rmse'] = rmse_sum/len(scores)
+    mean_scores['rmse_norm'] = rmse_sum_norm/mape_count
+    mean_scores['mase_norm'] = mase_sum_norm/mape_count
+    mean_scores['mae_norm'] = mae_sum_norm/mape_count
+    mean_scores['r2_norm'] = r2_sum_norm/mape_count
     mean_scores['mape_count'] = mape_count
     mean_scores['total'] = len(scores)
 
@@ -158,6 +164,8 @@ def eval_sarima_model(serialized_model, dataset):
     # scores['retrained']['r2'] = r2_score(val, backtest[1:])
     # scores['retrained']['mase_score'] = mase(val, backtest[1:], train)
     # scores['retrained']['mae_score'] = mae(val, backtest[1:])
+    logging.debug(no_retrain)
+    logging.debug(val)
     scores['r2'] = r2_score(val, no_retrain)
     scores['mase_score'] = mase(val, no_retrain, train)
     scores['mae_score'] = mae(val, no_retrain)
@@ -171,7 +179,14 @@ def eval_sarima_model(serialized_model, dataset):
     return scores
 
 
-def get_sarima_predictions(model):
+def get_sarima_predictions(model, dataset):
+    logging.debug(dataset)
+    df = pd.DataFrame.from_dict(dataset)
+
+    ts = TimeSeries.from_dataframe(
+        df, time_col='time_interval', value_cols=['count'])
+
+    model.fit(series=ts)
     prediction = model.predict(7)  # Predict a week ahead
     prediction_json = json.loads(prediction.to_json())
     dates = prediction_json['index']

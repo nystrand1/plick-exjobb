@@ -133,8 +133,8 @@ def generate_query_sarima_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_sarima'])
-        predictions = get_sarima_predictions(model)
         store_sarima_model(db, pickle.dumps(model), trend_type="query", id=dataset['query'])
+        predictions = get_sarima_predictions(model, ts)
         store_sarima_prediction(db, prediction=predictions, trend_type="query", id=dataset['query'])
 
 
@@ -149,8 +149,8 @@ def generate_query_tcn_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_tcn'])
-        predictions = get_tcn_predictions(model, ts)
         store_tcn_model(db, pickle.dumps(model), trend_type="query", id=dataset['query'])
+        predictions = get_tcn_predictions(model, ts)
         store_tcn_prediction(db, prediction=predictions, trend_type="query", id=dataset['query'])
 
 def generate_query_lstm_models(db, regenerate = False):
@@ -164,8 +164,8 @@ def generate_query_lstm_models(db, regenerate = False):
             model = model[0]
         else:
             model = pickle.loads(dataset['model_lstm'])
-        predictions = get_lstm_predictions(model, ts)
         store_lstm_model(db, pickle.dumps(model), trend_type="query", id=dataset['query'])
+        predictions = get_lstm_predictions(model, ts)
         store_lstm_prediction(db, prediction=predictions, trend_type="query", id=dataset['query'])
 
 
@@ -268,7 +268,7 @@ def get_query_dataset(db, query):
 
 def get_all_query_datasets(db):
     res = db.session.execute("""
-        SELECT query, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics
+        SELECT query, model_tcn, model_lstm, model_sarima, time_series_day, tcn_metrics, lstm_metrics, sarima_metrics, tcn_prediction
         FROM plick.query_trends
     """)
     res_arr = []
