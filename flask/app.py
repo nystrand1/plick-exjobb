@@ -12,9 +12,7 @@ from flask_sqlalchemy import Model
 from flask_cors import CORS, cross_origin
 from http import HTTPStatus
 
-import multiprocessing
-from joblib import Parallel
-from joblib import delayed
+import matplotlib.pyplot as plt
 
 from darts import TimeSeries
 from darts.models import AutoARIMA
@@ -29,7 +27,6 @@ from .functions.trends.brand import *
 from .functions.trends.category import *
 from .functions.trends.query import *
 
-#from .functions.utils.sanitizer import *
 from .functions.count_interval import *
 from .functions.regression.linear import *
 from .functions.regression.sarima import *
@@ -108,51 +105,57 @@ def generate_trend_data():
 @cross_origin()
 def generate_tcn_models():
     logging.debug("GENERATING QUERY TCN MODELS")
-    generate_query_tcn_models(db)
+    generate_query_tcn_models(db, regenerate=False)
     logging.debug("GENERATING CATEGORY TCN MODELS")
-    #generate_category_tcn_models(db)
+    generate_category_tcn_models(db, regenerate=False)
     logging.debug("GENERATING BRAND TCN MODELS")
-    #generate_brand_tcn_models(db)
+    generate_brand_tcn_models(db, regenerate=False)
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/sarima-test', methods=['GET'])
+@app.route('/generate-lstm-models', methods=['GET'])
 @cross_origin()
-def sarima_test():
-    dataset = get_category_dataset(db, 12)
-    logging.debug(dataset['time_series_hour'])
-    dataset = dataset['time_series_hour']
-    model = get_sarima_model(dataset)
-    store_sarima_model(db, pickle.dumps(model))
-    logging.debug(model.summary())
-    return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
+def generate_lstm_models():
+    logging.debug("GENERATING QUERY LSTM MODELS")
+    generate_query_lstm_models(db, regenerate=False)
+    logging.debug("GENERATING CATEGORY LSTM MODELS")
+    generate_category_lstm_models(db, regenerate=False)
+    logging.debug("GENERATING BRAND LSTM MODELS")
+    generate_brand_lstm_models(db, regenerate=False)
+    return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
-@app.route('/tcn-test', methods=['GET'])
+@app.route('/generate-sarima-models', methods=['GET'])
 @cross_origin()
-def tcn_test():
-    param_dict = dict()
-    for i in range(1, 21):
-        dataset = get_category_dataset(db, i)
-        logging.debug(dataset['time_series_day'])
-        ts = dataset['time_series_day']
-        if(dataset['model_tcn'] is None):
-            model = get_tcn_model(dataset=ts)
-            param_dict[i] = model[1]
-            model = model[0]
-        else:
-            model = pickle.loads(dataset['model_tcn'])
-        predictions = get_tcn_predictions(model)
-        store_tcn_model(db, pickle.dumps(model), trend_type="category", id=i)
-        store_tcn_prediction(db, prediction=predictions, id=i)
+def generate_sarima_models():
+    logging.debug("GENERATING QUERY SAIMRA MODELS")
+    generate_query_sarima_models(db, regenerate=False)
+    logging.debug("GENERATING CATEGORY SAIMRA MODELS")
+    generate_category_sarima_models(db, regenerate=False)
+    logging.debug("GENERATING BRAND SARIMA MODELS")
+    generate_brand_sarima_models(db, regenerate=False)
+    return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
-    logging.debug(param_dict)
-    return Response(json.dumps(predictions), status=HTTPStatus.OK, content_type="application/json")
+@app.route('/generate-models', methods=['GET'])
+@cross_origin()
+def generate_models():
+    generate_tcn_models()
+    generate_lstm_models()
+    generate_sarima_models()
+    return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-words', methods=['POST'])
 @cross_origin()
 def trending_words():
     data = request.json
     limit = data['limit']
-    res = get_trending_words(db, limit)
+    if 'future' in data:
+        future = data['future']
+    else:
+        future = False
+    
+    if future:
+        res = get_future_trending_words(db, limit)
+    else:
+        res = get_trending_words(db, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-categories', methods=['POST'])
@@ -160,7 +163,15 @@ def trending_words():
 def trending_categories():
     data = request.json
     limit = data['limit']
-    res = get_trending_categories(db)
+    if 'future' in data:
+        future = data['future']
+    else:
+        future = False
+    
+    if future:
+        res = get_future_trending_categories(db, limit)
+    else:
+        res = get_trending_categories(db, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-brands', methods=['POST'])
@@ -168,7 +179,16 @@ def trending_categories():
 def trending_brands():
     data = request.json
     limit = data['limit']
-    res = get_trending_brands(db)
+    if 'future' in data:
+        future = data['future']
+    else:
+        future = False
+    
+    if future:
+        res = get_future_trending_brands(db, limit)
+    else:
+        res = get_trending_brands(db)
+        
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/example-ads', methods=['POST'])
@@ -194,39 +214,122 @@ def brand_dataset():
     res = get_brand_dataset(db, data['brand'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+@app.route('/eval-sarima', methods=['GET'])
+@cross_origin()
+def eval_sarima():
+    brands = get_all_brand_datasets(db)
+    categories = get_all_category_datasets(db)
+    queries = get_all_query_datasets(db)
+    scores = eval_all_sarima_models(db, categories, brands, queries, regenerate=True)
+    return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
+
+@app.route('/eval-lstm', methods=['GET'])
+@cross_origin()
+def eval_lstm():
+    brands = get_all_brand_datasets(db)
+    categories = get_all_category_datasets(db)
+    queries = get_all_query_datasets(db)
+    
+    scores = eval_all_lstm_models(db, categories, brands, queries, regenerate=True)
+    
+    return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
+
+@app.route('/eval-tcn', methods=['GET'])
+@cross_origin()
+def eval_tcn():
+    brands = get_all_brand_datasets(db)
+    categories = get_all_category_datasets(db)
+    queries = get_all_query_datasets(db)
+    
+    scores = eval_all_tcn_models(db, categories, brands, queries, regenerate=True)
+    
+    return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
 @app.route('/darts-test', methods=['GET'])
 @cross_origin()
 def darts_test():
-    dataset = get_brand_dataset(db, 5)
+    dataset = get_category_dataset(db, 6)
     logging.debug(dataset['time_series_day'])
     dataset = dataset['time_series_day']
     test = pd.DataFrame.from_dict(dataset)
-    test.to_csv('./functions/regression/mk_day.csv')
-    # ts = TimeSeries.from_dataframe(test, time_col='time_interval', value_cols=['count'])
-    
-    # latest_date = datetime.strptime(dataset[-1]['time_interval'], '%Y-%m-%d %H:%M:%S')
-    # split_date = latest_date - timedelta(days=15)
-
-    # train, val = ts.split_after(pd.Timestamp(split_date))
-    # logging.debug(ts)
-    # logging.debug(train)
-    
-    # tcn = TCNModel(
-    #     input_chunk_length=(24*14) + 1,
-    #     output_chunk_length=24*14,
-    #     n_epochs=400,
-    #     dropout=0.1,
-    #     dilation_base=2,
-    #     weight_norm=True,
-    #     kernel_size=5,
-    #     num_filters=3,
-    #     random_state=0
-    # )
-    # tcn.fit(ts)
-    # logging.debug(tcn.predict(1))
-    # arima = AutoARIMA()
-    # arima.fit(series=ts)
-    # logging.debug(arima.model.summary())
-    # logging.debug(ts)
-    # logging.debug(arima.predict(1))
+    test.to_csv('./functions/regression/jeans_day.csv')
     return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/eval-brands', methods=['GET'])
+@cross_origin()
+def eval_brands():
+    scores = get_brand_model_scores(db)
+    return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
+@app.route('/graphs', methods=['GET'])
+@cross_origin()
+def get_graphs():
+    brands = get_all_brand_datasets(db)
+    for brand in brands:
+        dataset = brand['time_series_day']
+        serialized_model_tcn = brand['model_tcn']
+        serialized_model_lstm = brand['model_lstm']
+        serialized_model_sarima = brand['model_sarima']
+        name = brand['brand_name']
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_sarima_backtest(serialized_model_sarima, dataset)
+        plt.legend()
+        plt.savefig("graphs/brands/{}.png".format(name))
+        plt.clf()
+
+    categories = get_all_category_datasets(db)
+    for category in categories:
+        dataset = category['time_series_day']
+        serialized_model_tcn = category['model_tcn']
+        serialized_model_lstm = category['model_lstm']
+        serialized_model_sarima = category['model_sarima']
+        name = category['category_name']
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_sarima_backtest(serialized_model_sarima, dataset)
+        plt.legend()
+        plt.savefig("graphs/categories/{}.png".format(name))
+        plt.clf()
+
+    queries = get_all_query_datasets(db)
+    for query in queries:
+        dataset = query['time_series_day']
+        serialized_model_tcn = query['model_tcn']
+        serialized_model_lstm = query['model_lstm']
+        serialized_model_sarima = query['model_sarima']
+        name = "Query: '{}'".format(query['query'])
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_sarima_backtest(serialized_model_sarima, dataset)
+        plt.legend()
+        plt.savefig("graphs/queries/{}.png".format(query['query']))
+        plt.clf()
+
+    return "success"
+
+@app.route('/future', methods=['GET'])
+@cross_origin()
+def future():
+    brands = get_all_brand_datasets(db)
+    categories = get_all_category_datasets(db)
+    queries = get_all_query_datasets(db)
+
+    for brand in brands:
+        dataset = brand['tcn_prediction']
+        future_model = get_linear_model(dataset)
+        save_future_model(db, future_model, "brand", brand['brand_id'])
+
+    for category in categories:
+        dataset = category['tcn_prediction']
+        future_model = get_linear_model(dataset)
+        save_future_model(db, future_model, "category", category['category_id'])
+
+    for query in queries:
+        dataset = query['tcn_prediction']
+        future_model = get_linear_model(dataset)
+        save_future_model(db, future_model, "query", query['query'])
+
+    return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
