@@ -65,15 +65,16 @@ def get_popular_words_in_categorys(db, category_ids):
 
 def get_future_trending_categories(db, limit=5, k_threshold=0.5):
     res = db.session.execute("""
-    SELECT category_name, category_id, future_model, model_long,
-    future_model[1] as k_short,
+    SELECT category_name, category_id,
+    future_model[1] as k_future,
     model_long[1] as k_long,
     ABS(future_model[1]/model_long[1])*100 as k_val_diff_percent,
     future_model[1]-model_long[1] as k_val_diff,
-    (plick.weekly_count_diff(time_series_day))[1] - (plick.weekly_count_diff(time_series_day))[2] as weekly_diff,
-    (plick.weekly_count_diff(time_series_day))[3] * 100 - 100 as weekly_diff_percentage,
-    (plick.monthly_count_diff(time_series_day))[1] - (plick.monthly_count_diff(time_series_day))[2] as monthly_diff,
-    (plick.monthly_count_diff(time_series_day))[3] * 100 - 100 as monthly_diff_percentage
+    ABS(future_model[1]/model_short[1])*100 as k_val_future_diff_percent,
+    future_model[1]-model_short[1] as k_val_future_diff,
+    (plick.future_weekly_count_diff(time_series_day, tcn_prediction))[1] - 
+    (plick.future_weekly_count_diff(time_series_day, tcn_prediction))[2] as weekly_diff,
+    (plick.future_weekly_count_diff(time_series_day, tcn_prediction))[3] * 100 - 100 as weekly_diff_percentage
     FROM plick.category_trends
     WHERE future_model[1] + :threshold > model_long[1]
     AND future_model[1] > 1
@@ -90,14 +91,11 @@ def get_future_trending_categories(db, limit=5, k_threshold=0.5):
         data = dict()
         data['category_id'] = r['category_id']
         data['category_name'] = r['category_name']
-        data['model_long'] = r['model_long']
-        data['model_short'] = r['model_short']
         data['weekly_diff'] = int(r['weekly_diff'])
         data['weekly_diff_percentage'] = float(r['weekly_diff_percentage'])
-        data['monthly_diff'] = int(r['monthly_diff'])
-        data['monthly_diff_percentage'] = float(r['monthly_diff_percentage'])
         res_arr.append(data)
     return res_arr 
+
 def get_trending_categories(db, limit=5, k_threshold=0.5):
     res = db.session.execute("""
     SELECT category_name, category_id, model_short, model_long,
@@ -126,7 +124,7 @@ def get_trending_categories(db, limit=5, k_threshold=0.5):
         data['category_id'] = r['category_id']
         data['category_name'] = r['category_name']
         data['model_long'] = r['model_long']
-        data['model_short'] = r['model_short']
+        data['future_model'] = r['future_model']
         data['weekly_diff'] = int(r['weekly_diff'])
         data['weekly_diff_percentage'] = float(r['weekly_diff_percentage'])
         data['monthly_diff'] = int(r['monthly_diff'])

@@ -147,7 +147,15 @@ def generate_models():
 def trending_words():
     data = request.json
     limit = data['limit']
-    res = get_trending_words(db, limit)
+    if 'future' in data:
+        future = data['future']
+    else:
+        future = False
+    
+    if future:
+        res = get_future_trending_words(db, limit)
+    else:
+        res = get_trending_words(db, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-categories', methods=['POST'])
@@ -155,7 +163,15 @@ def trending_words():
 def trending_categories():
     data = request.json
     limit = data['limit']
-    res = get_trending_categories(db)
+    if 'future' in data:
+        future = data['future']
+    else:
+        future = False
+    
+    if future:
+        res = get_future_trending_categories(db, limit)
+    else:
+        res = get_trending_categories(db, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/trending-brands', methods=['POST'])
@@ -163,7 +179,16 @@ def trending_categories():
 def trending_brands():
     data = request.json
     limit = data['limit']
-    res = get_trending_brands(db)
+    if 'future' in data:
+        future = data['future']
+    else:
+        future = False
+    
+    if future:
+        res = get_future_trending_brands(db, limit)
+    else:
+        res = get_trending_brands(db)
+        
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
 @app.route('/example-ads', methods=['POST'])

@@ -85,6 +85,39 @@ def get_popular_words_in_brands(db, brand_ids):
 
     return res_arr
 
+def get_future_trending_brands(db, limit=5, k_threshold=0.5):
+    res = db.session.execute("""
+    SELECT brand_name, brand_id,
+    future_model[1] as k_future,
+    model_long[1] as k_long,
+    ABS(future_model[1]/model_long[1])*100 as k_val_diff_percent,
+    future_model[1]-model_long[1] as k_val_diff,
+    ABS(future_model[1]/model_short[1])*100 as k_val_future_diff_percent,
+    future_model[1]-model_short[1] as k_val_future_diff,
+    (plick.future_weekly_count_diff(time_series_day, tcn_prediction))[1] - 
+    (plick.future_weekly_count_diff(time_series_day, tcn_prediction))[2] as weekly_diff,
+    (plick.future_weekly_count_diff(time_series_day, tcn_prediction))[3] * 100 - 100 as weekly_diff_percentage
+    FROM plick.brand_trends
+    WHERE future_model[1] + :threshold > model_long[1]
+    AND future_model[1] > 1
+    ORDER BY future_model[1] DESC
+    LIMIT :limit
+    """, {
+        'limit': limit,
+        'threshold': k_threshold
+    })
+
+    res_arr = []
+
+    for r in res:
+        data = dict()
+        data['brand_id'] = r['brand_id']
+        data['brand_name'] = r['brand_name']
+        data['weekly_diff'] = int(r['weekly_diff'])
+        data['weekly_diff_percentage'] = float(r['weekly_diff_percentage'])
+        res_arr.append(data)
+    return res_arr 
+
 def get_trending_brands(db, limit=5, k_threshold=0.5):
     res = db.session.execute("""
     SELECT brand_name, 
