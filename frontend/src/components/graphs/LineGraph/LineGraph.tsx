@@ -1,15 +1,6 @@
 import * as React from 'react'
 import s from './LineGraph.module.scss'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ZAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from 'recharts'
+import { LineChart, Line, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip } from 'recharts'
 import moment from 'moment'
 import { useContext } from '~contexts'
 import { colors } from '~utils'

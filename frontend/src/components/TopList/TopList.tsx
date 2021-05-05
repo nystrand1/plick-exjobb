@@ -11,7 +11,7 @@ interface TopListProps {
 export const TopList = ({ type }: TopListProps) => {
   const { topListQueries, topListBrands, topListCategories } = useContext()
   const [time, setTime] = React.useState('1 vecka')
-  const maxLength = 4
+  const [maxLength, setMaxLength] = React.useState(4)
   let title = ''
 
   if (type === 'searchTerms') {
@@ -22,6 +22,10 @@ export const TopList = ({ type }: TopListProps) => {
   }
   if (type === 'categories') {
     title = 'Kategorier'
+  }
+
+  const showMore = () => {
+    setMaxLength(maxLength + 2)
   }
 
   const getTimeInterval = () => {
@@ -81,7 +85,9 @@ export const TopList = ({ type }: TopListProps) => {
                 })
               : renderLoading()}
             {topListQueries && topListQueries?.length > maxLength && (
-              <button className={s.showMoreButton}>Visa fler</button>
+              <button className={s.showMoreButton} onClick={() => showMore()}>
+                Visa fler
+              </button>
             )}
           </>
         )
@@ -103,7 +109,9 @@ export const TopList = ({ type }: TopListProps) => {
                 })
               : renderLoading()}
             {topListBrands && topListBrands?.length > maxLength && (
-              <button className={s.showMoreButton}>Visa fler</button>
+              <button className={s.showMoreButton} onClick={() => showMore()}>
+                Visa fler
+              </button>
             )}
           </>
         )
@@ -126,7 +134,9 @@ export const TopList = ({ type }: TopListProps) => {
                 })
               : renderLoading()}
             {topListCategories && topListCategories?.length > maxLength && (
-              <button className={s.showMoreButton}>Visa fler</button>
+              <button className={s.showMoreButton} onClick={() => showMore()}>
+                Visa fler
+              </button>
             )}
           </>
         )
