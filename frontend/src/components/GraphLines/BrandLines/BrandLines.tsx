@@ -2,7 +2,7 @@ import * as React from 'react'
 import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
-import { ReactComponent as ShowMore } from '~static/svg/add.svg'
+import { Line } from '../Line'
 
 interface BrandLinesProps {
   onClick: (line: any) => void
@@ -13,22 +13,18 @@ export const BrandLines = ({ onClick }: BrandLinesProps) => {
   return (
     <>
       {topListBrands?.map((line, i) => {
-        const style = activeBrands.includes(line.brand_id)
-          ? { borderColor: colors[i % colors.length] }
-          : {}
+        const color = colors[i % colors.length]
+        const style = activeBrands.includes(line.brand_id) ? { borderColor: color } : {}
         return (
-          <div className={s.line} style={style} key={line.brand_id}>
-            <button className={s.button} onClick={() => console.log('open')}>
-              <ShowMore />
-            </button>
-            <div className={s.content} onClick={() => onClick(line)}>
-              <div className={s.title}>{line.brand_name}</div>
-              <div className={s.values}>
-                <div>{line.weekly_diff}</div>
-                <div>{line.monthly_diff}</div>
-              </div>
-            </div>
-          </div>
+          <Line
+            style={style}
+            id={line.brand_id}
+            onClick={onClick}
+            title={line.brand_name}
+            diff={{ weekly: line.weekly_diff, monthly: line.monthly_diff }}
+            color={color}
+            key={line.brand_id}
+          />
         )
       })}
     </>

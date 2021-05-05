@@ -130,6 +130,8 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
     return moment(date, 'YYYY-MM-DD hh:mm:ss').format('YYYY-MM-DD')
   }
 
+  console.log(data)
+
   return (
     <div className={s.lineGraphWrapper}>
       <LineChart

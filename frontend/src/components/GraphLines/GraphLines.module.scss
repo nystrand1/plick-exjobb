@@ -30,58 +30,13 @@
   justify-content: space-between;
   font-weight: bold;
   margin-bottom: 16px;
-  padding: 0 52px;
+  padding: 0 12px 0 52px;
   text-align: center;
 
   .metricsTitle {
     width: 50%;
     display: flex;
     justify-content: space-around;
+    text-align: center;
   }
-}
-
-.line {
-  display: flex;
-  flex-direction: row;
-  margin-bottom: 16px;
-  box-shadow: rgba(0, 0, 0, 0.226) 0px 0px 15px;
-  border-radius: $borderRadiusSmall;
-  border-width: 3px;
-  border-style: solid;
-  border-color: white;
-  user-select: none;
-}
-
-.content {
-  padding: $mediumMargin;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.title {
-  font-size: 16px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-}
-
-.button {
-  background-color: transparent;
-  border: none;
-  padding: $mediumMargin;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-}
-
-.values {
-  width: 50%;
-  display: flex;
-  justify-content: space-around;
-  font-size: 16px;
-  font-weight: bold;
-  color: $lightText;
-  text-align: center;
 }

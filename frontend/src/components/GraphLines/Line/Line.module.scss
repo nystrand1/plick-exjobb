@@ -1,0 +1,82 @@
+@import '../../../styles/all';
+
+.lineWrapper {
+  margin-bottom: 16px;
+  box-shadow: rgba(0, 0, 0, 0.226) 0px 0px 15px;
+  border-radius: $borderRadiusSmall;
+  border-width: 3px;
+  border-style: solid;
+  border-color: white;
+  user-select: none;
+  height: 54px;
+  transition: height 0.2s ease;
+
+  &.open {
+    height: 100px;
+  }
+}
+
+.line {
+  display: flex;
+  flex-direction: row;
+}
+
+.content {
+  padding: $mediumMargin;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.values {
+  width: 50%;
+  display: flex;
+  justify-content: space-around;
+  font-size: 16px;
+  font-weight: bold;
+  color: $lightText;
+  text-align: center;
+}
+
+.button {
+  background-color: transparent;
+  border: none;
+  padding: $mediumMargin;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+
+  svg {
+    transition: transform 0.2s ease;
+
+    &.open {
+      transform: rotateZ(45deg);
+    }
+  }
+}
+
+.options {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.3s ease;
+  padding: 0 $largeMargin 0 $smallMargin;
+  display: flex;
+  flex-direction: row;
+
+  &.open {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+.option {
+  margin-left: $smallMargin;
+}
