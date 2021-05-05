@@ -1,34 +1,30 @@
 import * as React from 'react'
-import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
-import { ReactComponent as ShowMore } from '~static/svg/add.svg'
+import { GraphLine } from '../GraphLine'
 
 interface QueryLinesProps {
-  onClick: (line: any) => void
+  onClick: (id: any) => void
 }
 
 export const QueryLines = ({ onClick }: QueryLinesProps) => {
   const { topListQueries, activeQueries } = useContext()
+
   return (
     <>
       {topListQueries?.map((line, i) => {
-        const style = activeQueries.includes(line.query)
-          ? { borderColor: colors[i % colors.length] }
-          : {}
+        const color = colors[i % colors.length]
+        const style = activeQueries.includes(line.query) ? { borderColor: color } : {}
         return (
-          <div className={s.line} style={style} key={line.query}>
-            <button className={s.button} onClick={() => console.log('open')}>
-              <ShowMore />
-            </button>
-            <div className={s.content} onClick={() => onClick(line)}>
-              <div className={s.title}>{line.query}</div>
-              <div className={s.values}>
-                <div>{line.weekly_diff}</div>
-                <div>{line.monthly_diff}</div>
-              </div>
-            </div>
-          </div>
+          <GraphLine
+            key={line.query}
+            style={style}
+            id={line.query}
+            onClick={onClick}
+            title={line.query}
+            diff={{ weekly: line.weekly_diff, monthly: line.monthly_diff }}
+            color={color}
+          />
         )
       })}
     </>

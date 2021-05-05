@@ -25,26 +25,33 @@
 
 .text {
   display: flex;
+  width: 100%;
 
   .queryWrapper {
     margin-left: $smallMargin;
     text-align: left;
+    width: 100%;
 
     .queryAndMetric {
       display: flex;
+      justify-content: space-between;
+
       .query {
         font-size: 20px;
         display: inline-block;
+        text-transform: capitalize;
       }
+
       .metric {
         font-size: 14px;
         font-weight: bold;
         color: $lightText;
         display: flex;
-        margin-left: $mediumMargin;
+        margin-right: 22px;
 
         .diffPercentage {
-          margin-left: $smallMargin;
+          min-width: 50px;
+          margin-left: $largeMargin;
         }
       }
     }

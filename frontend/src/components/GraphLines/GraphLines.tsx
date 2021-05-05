@@ -17,12 +17,9 @@ export const GraphLines = () => {
     setActiveQueries,
   } = useContext()
 
-  const toggleLine = (line) => {
-    let id
-
+  const toggleLine = (id) => {
     switch (activeType) {
       case 'query':
-        id = line.query
         const queryIndex = activeQueries.indexOf(id)
         if (queryIndex === -1) {
           setActiveQueries([...activeQueries, id])
@@ -33,7 +30,6 @@ export const GraphLines = () => {
         }
         break
       case 'brand':
-        id = line.brand_id
         const brandIndex = activeBrands.indexOf(id)
         if (brandIndex === -1) {
           setActiveBrands([...activeBrands, id])
@@ -44,7 +40,6 @@ export const GraphLines = () => {
         }
         break
       case 'category':
-        id = line.category_id
         const categoryIndex = activeCategories.indexOf(id)
         if (categoryIndex === -1) {
           setActiveCategories([...activeCategories, id])

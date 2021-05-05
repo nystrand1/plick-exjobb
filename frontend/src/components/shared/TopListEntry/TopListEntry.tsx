@@ -1,6 +1,5 @@
 import * as React from 'react'
 import s from './TopListEntry.module.scss'
-import { ReactComponent as ShowMore } from '~static/svg/more.svg'
 import { Api } from '~services'
 import Loading from '~static/images/loading.gif'
 

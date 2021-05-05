@@ -37,8 +37,17 @@
   margin: 0;
 }
 
-.entries {
+.dataTitles {
   padding-top: $mediumMargin;
+  display: flex;
+  justify-content: flex-end;
+  font-size: 12px;
+  font-weight: bold;
+  margin-right: 142px;
+}
+
+.data {
+  margin-right: $largeMargin;
 }
 
 .showMoreButton {

@@ -1,15 +1,6 @@
 import * as React from 'react'
 import s from './LineGraph.module.scss'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ZAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from 'recharts'
+import { LineChart, Line, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip } from 'recharts'
 import moment from 'moment'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
@@ -146,8 +137,8 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
         />
         <YAxis name={'count'} />
         <ZAxis dataKey={'query'} />
-        <Tooltip />
-        <Legend payload={[{ value: 'item name', type: 'line', id: 'ID01' }]} />
+        <Tooltip content={<CustomTooltip />} />
+        {/*<Legend verticalAlign="top" iconSize={24} height={48} /> */}
         {(getActiveLines() as Array<string | number>).map((lineId: string | number) => (
           <Line
             key={lineId}
