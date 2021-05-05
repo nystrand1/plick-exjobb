@@ -11,7 +11,7 @@ interface TopListProps {
 export const TopList = ({ type }: TopListProps) => {
   const { topListQueries, topListBrands, topListCategories } = useContext()
   const [time, setTime] = React.useState('1 vecka')
-  const hasMoreToShow = false
+  const maxLength = 4
   let title = ''
 
   if (type === 'searchTerms') {
@@ -66,7 +66,7 @@ export const TopList = ({ type }: TopListProps) => {
         return (
           <>
             {topListQueries
-              ? topListQueries.map((entry, index) => {
+              ? topListQueries.slice(0, maxLength).map((entry, index) => {
                   const entryDiff = getDiff(entry)
                   return (
                     <TopListEntry
@@ -80,13 +80,16 @@ export const TopList = ({ type }: TopListProps) => {
                   )
                 })
               : renderLoading()}
+            {topListQueries && topListQueries?.length > maxLength && (
+              <button className={s.showMoreButton}>Visa fler</button>
+            )}
           </>
         )
       case 'brands':
         return (
           <>
             {topListBrands
-              ? topListBrands.map((entry, index) => {
+              ? topListBrands.slice(0, maxLength).map((entry, index) => {
                   const entryDiff = getDiff(entry)
                   return (
                     <TopListEntry
@@ -99,6 +102,9 @@ export const TopList = ({ type }: TopListProps) => {
                   )
                 })
               : renderLoading()}
+            {topListBrands && topListBrands?.length > maxLength && (
+              <button className={s.showMoreButton}>Visa fler</button>
+            )}
           </>
         )
       case 'categories':
@@ -106,7 +112,7 @@ export const TopList = ({ type }: TopListProps) => {
         return (
           <>
             {topListCategories
-              ? topListCategories.map((entry, index) => {
+              ? topListCategories.slice(0, maxLength).map((entry, index) => {
                   const entryDiff = getDiff(entry)
                   return (
                     <TopListEntry
@@ -119,6 +125,9 @@ export const TopList = ({ type }: TopListProps) => {
                   )
                 })
               : renderLoading()}
+            {topListCategories && topListCategories?.length > maxLength && (
+              <button className={s.showMoreButton}>Visa fler</button>
+            )}
           </>
         )
     }
@@ -132,10 +141,13 @@ export const TopList = ({ type }: TopListProps) => {
           <p className={s.date}>{getTimeInterval()}</p>
           <DropDown options={options} value={time} onChange={setTime} />
         </div>
+        <div className={s.dataTitles}>
+          <div className={s.data}>DIFF</div>
+          <div>DIFF %</div>
+        </div>
         <div>
           <div className={s.entries}>{renderTopList()}</div>
         </div>
-        {hasMoreToShow && <button className={s.showMoreButton}>Visa top 50</button>}
       </div>
     </div>
   )
