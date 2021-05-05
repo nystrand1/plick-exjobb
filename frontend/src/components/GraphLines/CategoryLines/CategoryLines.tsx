@@ -2,7 +2,7 @@ import * as React from 'react'
 import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
-import { Line } from '../Line'
+import { GraphLine } from '../GraphLine'
 
 interface CategoryLinesProps {
   onClick: (line: any) => void
@@ -18,7 +18,7 @@ export const CategoryLines = ({ onClick }: CategoryLinesProps) => {
           ? { borderColor: color }
           : {}
         return (
-          <Line
+          <GraphLine
             style={style}
             id={line.category_id}
             onClick={onClick}

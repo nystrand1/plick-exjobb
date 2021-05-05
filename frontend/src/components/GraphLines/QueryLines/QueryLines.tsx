@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
-import { Line } from '../Line'
+import { GraphLine } from '../GraphLine'
 
 interface QueryLinesProps {
   onClick: (id: any) => void
@@ -16,7 +16,7 @@ export const QueryLines = ({ onClick }: QueryLinesProps) => {
         const color = colors[i % colors.length]
         const style = activeQueries.includes(line.query) ? { borderColor: color } : {}
         return (
-          <Line
+          <GraphLine
             key={line.query}
             style={style}
             id={line.query}

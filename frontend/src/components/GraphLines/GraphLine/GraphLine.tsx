@@ -15,7 +15,7 @@ interface LineProps {
   color: string
 }
 
-export const Line = ({ title, onClick, diff, style, id, color }: LineProps) => {
+export const GraphLine = ({ title, onClick, diff, style, id, color }: LineProps) => {
   const [open, setOpen] = React.useState(false)
   const [displayTrendLine, setDisplayTrendLine] = React.useState(false)
   const [displayPrediciton, setDisplayPrediciton] = React.useState(false)

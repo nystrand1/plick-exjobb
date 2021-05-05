@@ -130,8 +130,6 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
     return moment(date, 'YYYY-MM-DD hh:mm:ss').format('YYYY-MM-DD')
   }
 
-  console.log(data)
-
   return (
     <div className={s.lineGraphWrapper}>
       <LineChart
@@ -148,8 +146,8 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
         />
         <YAxis name={'count'} />
         <ZAxis dataKey={'query'} />
-        <Tooltip />
-        <Legend payload={[{ value: 'item name', type: 'line', id: 'ID01' }]} />
+        <Tooltip content={<CustomTooltip />} />
+        {/*<Legend verticalAlign="top" iconSize={24} height={48} /> */}
         {(getActiveLines() as Array<string | number>).map((lineId: string | number) => (
           <Line
             key={lineId}

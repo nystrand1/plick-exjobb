@@ -2,7 +2,7 @@ import * as React from 'react'
 import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
-import { Line } from '../Line'
+import { GraphLine } from '../GraphLine'
 
 interface BrandLinesProps {
   onClick: (line: any) => void
@@ -16,7 +16,7 @@ export const BrandLines = ({ onClick }: BrandLinesProps) => {
         const color = colors[i % colors.length]
         const style = activeBrands.includes(line.brand_id) ? { borderColor: color } : {}
         return (
-          <Line
+          <GraphLine
             style={style}
             id={line.brand_id}
             onClick={onClick}
