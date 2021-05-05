@@ -133,6 +133,17 @@ def eval_all_sarima_models(db, categories, brands, queries, regenerate = False):
 
     return mean_scores
 
+def plot_sarima_predictions(serialized_model, dataset):
+    df = pd.DataFrame.from_dict(dataset)
+    model = pickle.loads(serialized_model)
+
+    ts = TimeSeries.from_dataframe(
+        df, time_col='time_interval', value_cols=['count'])
+    model.fit(series=ts)
+
+    prediction = model.predict(7) #Predict a week ahead
+    ts.plot(label='Actual', lw=3, c='black')
+    prediction.plot(label='SARIMA Prediction', lw=3, c='blue')
 
 def get_sarima_backtest(serialized_model, dataset):
     df = pd.DataFrame.from_dict(dataset)
@@ -143,7 +154,8 @@ def get_sarima_backtest(serialized_model, dataset):
     sarima_model = pickle.loads(serialized_model)
     sarima_model.fit(train)
     backtest = sarima_model.predict(len(val))
-    backtest.plot(label='SARIMA Model', lw=3)
+    ts.plot(label='Actual', lw=3, c='black')
+    backtest.plot(label='SARIMA Model', lw=3, c='blue')
 
 def eval_sarima_model(serialized_model, dataset):
     sarima_model = pickle.loads(serialized_model)

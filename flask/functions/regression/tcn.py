@@ -101,6 +101,19 @@ def get_tcn_predictions(model, dataset):
     logging.debug(prediction_dataset)
     return prediction_dataset
 
+def plot_tcn_predictions(serialized_model, dataset):
+    df = pd.DataFrame.from_dict(dataset)
+    model = pickle.loads(serialized_model)
+
+    ts = TimeSeries.from_dataframe(
+        df, time_col='time_interval', value_cols=['count'])
+    scaler = Scaler()
+    ts = scaler.fit_transform(ts)
+    model.fit(series=ts)
+
+    prediction = scaler.inverse_transform(model.predict(7)) #Predict a week ahead
+    prediction.plot(label='TCN Prediction', lw=3, c='red')
+
 def get_tcn_backtest(serialized_model, dataset, topic):
     df = pd.DataFrame.from_dict(dataset)
     
@@ -119,10 +132,9 @@ def get_tcn_backtest(serialized_model, dataset, topic):
             retrain=False,
             verbose=False
     )
-    backtest = scaler.inverse_transform(backtest)
+    backtest = scaler.inverse_transform(backtest[1:])
     ts = scaler.inverse_transform(ts)
-    ts.plot(label='Actual', lw=3)
-    backtest.plot(label='TCN Model', lw=3)
+    backtest.plot(label='TCN Model', lw=3, c='red')
     plt.title("{} Daily".format(topic))
     plt.xlabel("Date")
     plt.ylabel("Count")

@@ -273,9 +273,9 @@ def get_graphs():
         serialized_model_lstm = brand['model_lstm']
         serialized_model_sarima = brand['model_sarima']
         name = brand['brand_name']
-        get_tcn_backtest(serialized_model_tcn, dataset, name)
-        get_lstm_backtest(serialized_model_lstm, dataset)
         get_sarima_backtest(serialized_model_sarima, dataset)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
         plt.legend()
         plt.savefig("graphs/brands/{}.png".format(name))
         plt.clf()
@@ -287,9 +287,9 @@ def get_graphs():
         serialized_model_lstm = category['model_lstm']
         serialized_model_sarima = category['model_sarima']
         name = category['category_name']
-        get_tcn_backtest(serialized_model_tcn, dataset, name)
-        get_lstm_backtest(serialized_model_lstm, dataset)
         get_sarima_backtest(serialized_model_sarima, dataset)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
         plt.legend()
         plt.savefig("graphs/categories/{}.png".format(name))
         plt.clf()
@@ -301,11 +301,58 @@ def get_graphs():
         serialized_model_lstm = query['model_lstm']
         serialized_model_sarima = query['model_sarima']
         name = "Query: '{}'".format(query['query'])
-        get_tcn_backtest(serialized_model_tcn, dataset, name)
-        get_lstm_backtest(serialized_model_lstm, dataset)
         get_sarima_backtest(serialized_model_sarima, dataset)
+        get_lstm_backtest(serialized_model_lstm, dataset)
+        get_tcn_backtest(serialized_model_tcn, dataset, name)
         plt.legend()
         plt.savefig("graphs/queries/{}.png".format(query['query']))
+        plt.clf()
+
+    return "success"
+
+@app.route('/graphs-prediction', methods=['GET'])
+@cross_origin()
+def get_future_graphs():
+    brands = get_all_brand_datasets(db)
+    for brand in brands:
+        dataset = brand['time_series_day']
+        serialized_model_tcn = brand['model_tcn']
+        serialized_model_lstm = brand['model_lstm']
+        serialized_model_sarima = brand['model_sarima']
+        name = brand['brand_name']
+        plot_sarima_predictions(serialized_model_sarima, dataset)
+        plot_lstm_predictions(serialized_model_lstm, dataset)
+        plot_tcn_predictions(serialized_model_tcn, dataset)
+        plt.legend()
+        plt.savefig("predictions/brands/{}.png".format(name))
+        plt.clf()
+
+    categories = get_all_category_datasets(db)
+    for category in categories:
+        dataset = category['time_series_day']
+        serialized_model_tcn = category['model_tcn']
+        serialized_model_lstm = category['model_lstm']
+        serialized_model_sarima = category['model_sarima']
+        name = category['category_name']
+        plot_sarima_predictions(serialized_model_sarima, dataset)
+        plot_lstm_predictions(serialized_model_lstm, dataset)
+        plot_tcn_predictions(serialized_model_tcn, dataset)
+        plt.legend()
+        plt.savefig("predictions/categories/{}.png".format(name))
+        plt.clf()
+
+    queries = get_all_query_datasets(db)
+    for query in queries:
+        dataset = query['time_series_day']
+        serialized_model_tcn = query['model_tcn']
+        serialized_model_lstm = query['model_lstm']
+        serialized_model_sarima = query['model_sarima']
+        name = "Query: '{}'".format(query['query'])
+        plot_sarima_predictions(serialized_model_sarima, dataset)
+        plot_lstm_predictions(serialized_model_lstm, dataset)
+        plot_tcn_predictions(serialized_model_tcn, dataset)
+        plt.legend()
+        plt.savefig("predictions/queries/{}.png".format(query['query']))
         plt.clf()
 
     return "success"

@@ -107,6 +107,19 @@ def get_lstm_predictions(model, dataset):
     logging.debug(prediction_dataset)
     return prediction_dataset
 
+def plot_lstm_predictions(serialized_model, dataset):
+    df = pd.DataFrame.from_dict(dataset)
+    model = pickle.loads(serialized_model)
+
+    ts = TimeSeries.from_dataframe(
+        df, time_col='time_interval', value_cols=['count'])
+    scaler = Scaler()
+    ts = scaler.fit_transform(ts)
+    model.fit(series=ts)
+
+    prediction = scaler.inverse_transform(model.predict(7)) #Predict a week ahead
+    prediction.plot(label='LSTM Prediction', lw=3, c='orange')
+
 def get_lstm_backtest(serialized_model, dataset):
     df = pd.DataFrame.from_dict(dataset)
     
@@ -125,9 +138,9 @@ def get_lstm_backtest(serialized_model, dataset):
             retrain=False,
             verbose=False
     )
-    backtest = scaler.inverse_transform(backtest)
+    backtest = scaler.inverse_transform(backtest[1:])
     ts = scaler.inverse_transform(ts)
-    backtest.plot(label='LSTM Model', lw=3)
+    backtest.plot(label='LSTM Model', lw=3, c='orange')
 
 def eval_all_lstm_models(db, categories, brands, queries, regenerate = False):
     scores = list() 
