@@ -98,7 +98,7 @@ def get_future_trending_categories(db, limit=5, k_threshold=0.5):
 
 def get_trending_categories(db, limit=5, k_threshold=0.5):
     res = db.session.execute("""
-    SELECT category_name, category_id, model_short, model_long,
+    SELECT category_name, category_id, model_short, model_long, future_model,
     model_short[1] as k_short,
     model_long[1] as k_long,
     ABS(model_short[1]/model_long[1])*100 as k_val_diff_percent,
@@ -386,13 +386,18 @@ def get_formatted_category_time_series(db, start_date="2021-01-01", end_date="20
                 data['trend_long_{}'.format(category_id)] = linear_datasets[category_id]['long'][i]
                 if (i >= res.rowcount - 7):
                     data['trend_short_{}'.format(category_id)] = linear_datasets[category_id]['short'][short_index]
-                    data['tcn_pred_{}'.format(category_id)] = category_tcn_predictions[category_id][short_index]['count']
             
             if (i >= res.rowcount - 7):
                 short_index += 1
             res_arr.append(dict(data))
 
-    #res_arr.reverse()
+        for i in range(7):
+            tcn_data = dict()
+            for category_id in category_tcn_predictions:
+                tcn_data['tcn_pred_{}'.format(category_id)] = category_tcn_predictions[category_id][i]['count']
+                tcn_data['time_interval'] = category_tcn_predictions[category_id][i]['time_interval']
+            res_arr.append(tcn_data)
+            
     return res_arr
 
 

@@ -5,7 +5,7 @@ import { colors } from '~utils'
 import { GraphLine } from '../GraphLine'
 
 interface CategoryLinesProps {
-  onClick: (line: any) => void
+  onClick: (newLine: DataLine) => void
 }
 
 export const CategoryLines = ({ onClick }: CategoryLinesProps) => {
@@ -14,7 +14,9 @@ export const CategoryLines = ({ onClick }: CategoryLinesProps) => {
     <>
       {topListCategories?.map((line, i) => {
         const color = colors[i % colors.length]
-        const style = activeCategories.includes(line.category_id)
+        const style = activeCategories.find(
+          (activeLine) => activeLine.lineId === line.category_id,
+        )
           ? { borderColor: color }
           : {}
         return (

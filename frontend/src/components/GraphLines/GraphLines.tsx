@@ -8,47 +8,41 @@ import { CategoryLines } from './CategoryLines'
 
 export const GraphLines = () => {
   const {
-    activeType,
-    activeBrands,
-    activeCategories,
-    activeQueries,
+    activeLines,
     setActiveBrands,
     setActiveCategories,
     setActiveQueries,
+    activeType,
   } = useContext()
 
-  const toggleLine = (id) => {
+  const setActiveLines = (lines) => {
     switch (activeType) {
-      case 'query':
-        const queryIndex = activeQueries.indexOf(id)
-        if (queryIndex === -1) {
-          setActiveQueries([...activeQueries, id])
-        } else {
-          const tmpArr = [...activeQueries]
-          tmpArr.splice(queryIndex, 1)
-          setActiveQueries(tmpArr)
-        }
-        break
       case 'brand':
-        const brandIndex = activeBrands.indexOf(id)
-        if (brandIndex === -1) {
-          setActiveBrands([...activeBrands, id])
-        } else {
-          const tmpArr = [...activeBrands]
-          tmpArr.splice(brandIndex, 1)
-          setActiveBrands(tmpArr)
-        }
+        setActiveBrands(lines)
         break
       case 'category':
-        const categoryIndex = activeCategories.indexOf(id)
-        if (categoryIndex === -1) {
-          setActiveCategories([...activeCategories, id])
-        } else {
-          const tmpArr = [...activeCategories]
-          tmpArr.splice(categoryIndex, 1)
-          setActiveCategories(tmpArr)
-        }
+        setActiveCategories(lines)
         break
+      case 'query':
+      default:
+        setActiveQueries(lines)
+    }
+  }
+
+  const toggleLine = (newLine: DataLine, toggle = false) => {
+    const index = activeLines.findIndex(
+      (activeLine) => activeLine.lineId === newLine.lineId,
+    )
+    if (index === -1) {
+      setActiveLines([...activeLines, newLine])
+    } else {
+      const tmpArr = [...activeLines]
+      if (toggle) {
+        tmpArr.splice(index, 1)
+      } else {
+        tmpArr[index] = newLine
+      }
+      setActiveLines(tmpArr)
     }
   }
 

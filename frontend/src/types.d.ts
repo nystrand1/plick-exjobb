@@ -53,6 +53,12 @@ interface IDataPoint {
   trends: {}
 }
 
+interface DataLine {
+  lineId: string | number
+  displayTrend: boolean
+  displayPrediction: boolean
+}
+
 interface ITimeSeries {
   created_at: string
   model_long: number[]

@@ -24,18 +24,31 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
     activeType,
     startDate,
     endDate,
+    activeLines,
   } = useContext()
   const [data, setData] = React.useState<ITimeSeriesSearchTerms[]>([])
+  const [tcnData, setTcnData] = React.useState<ITimeSeriesSearchTerms[]>([])
   const margin = 50
 
-  const sliceData = React.useCallback(
+  const updateData = React.useCallback(
     (data) => {
       const startIndex = data.findIndex(
         (e) => Number(new Date(e.time_interval)) === Number(startDate),
       )
+
+      const tcnIndex = data.findIndex((d) =>
+        Object.keys(d).find((key) => /tcn_pred_*/.test(key)),
+      )
+
+      if (tcnIndex) {
+        setTcnData(data.slice(tcnIndex, data.length))
+        data = data.slice(startIndex, tcnIndex)
+      }
+
       const endIndex =
         data.findIndex((e) => Number(new Date(e.time_interval)) === Number(endDate)) + 1
-      return data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length)
+
+      setData(data.slice(startIndex > 0 ? startIndex : 0, endIndex || data.length))
     },
     [endDate, startDate],
   )
@@ -45,10 +58,13 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
       case 'brand':
         if (activeBrands.length > 0) {
           Api.getBrandTimeseries({
-            brand_ids: activeBrands,
+            brand_ids:
+              activeBrands.length > 0
+                ? activeBrands.map((line) => line.lineId as number)
+                : [],
             resolution: resolution,
           }).then((data) => {
-            setData(sliceData(data))
+            updateData(data)
           })
         }
         break
@@ -56,10 +72,13 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
       case 'category':
         if (activeCategories.length > 0) {
           Api.getCategoryTimeseries({
-            category_ids: activeCategories,
+            category_ids:
+              activeCategories.length > 0
+                ? activeCategories.map((line) => line.lineId as number)
+                : [],
             resolution: resolution,
           }).then((data) => {
-            setData(sliceData(data))
+            updateData(data)
           })
         }
         break
@@ -67,16 +86,18 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
       case 'query':
         if (activeQueries.length > 0) {
           Api.getQueryTimeseries({
-            query_ids: activeQueries,
+            query_ids:
+              activeQueries.length > 0
+                ? activeQueries.map((line) => line.lineId as string)
+                : [],
             resolution: resolution,
           }).then((data) => {
-            setData(sliceData(data))
+            updateData(data)
           })
         }
         break
     }
   }, [
-    setData,
     activeBrands,
     activeCategories,
     activeQueries,
@@ -84,7 +105,7 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
     startDate,
     endDate,
     activeType,
-    sliceData,
+    updateData,
   ])
 
   const getColorIndex = (lineId) => {
@@ -105,16 +126,11 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
     }
   }
 
-  const getActiveLines = () => {
-    switch (activeType) {
-      case 'brand':
-        return activeBrands
-      case 'category':
-        return activeCategories
-      case 'query':
-      default:
-        return activeQueries
+  const getGraphData = () => {
+    if (!!activeLines.find((line) => line.displayPrediction)) {
+      return [...data, ...tcnData]
     }
+    return data
   }
 
   const xAxisTickFormatter = (date) => {
@@ -126,7 +142,7 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
       <LineChart
         width={width}
         height={height}
-        data={data}
+        data={getGraphData()}
         margin={{ top: margin / 5, right: margin, left: margin / 2, bottom: margin / 5 }}
       >
         <CartesianGrid strokeDasharray="3 3" />
@@ -138,17 +154,57 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
         <YAxis name={'count'} />
         <ZAxis dataKey={'query'} />
         <Tooltip content={<CustomTooltip />} />
-        {/*<Legend verticalAlign="top" iconSize={24} height={48} /> */}
-        {(getActiveLines() as Array<string | number>).map((lineId: string | number) => (
-          <Line
-            key={lineId}
-            type="monotone"
-            dataKey={`${activeType}_${lineId}_count`}
-            stroke={colors[getColorIndex(lineId)]}
-            strokeWidth={3}
-            dot={false}
-          />
-        ))}
+        {(activeLines as Array<DataLine>).map((dataLine: DataLine) => {
+          const lines = [
+            <Line
+              key={dataLine.lineId}
+              type="monotone"
+              dataKey={`${activeType}_${dataLine.lineId}_count`}
+              stroke={colors[getColorIndex(dataLine.lineId)]}
+              strokeWidth={3}
+              dot={false}
+            />,
+          ]
+
+          if (dataLine.displayTrend) {
+            lines.push(
+              <Line
+                key={`trend_long_${dataLine.lineId}`}
+                type="monotone"
+                dataKey={`trend_long_${dataLine.lineId}`}
+                stroke={'black'}
+                strokeWidth={2}
+                dot={false}
+                strokeDasharray="4"
+              />,
+              <Line
+                key={`trend_short_${dataLine.lineId}`}
+                type="monotone"
+                dataKey={`trend_short_${dataLine.lineId}`}
+                stroke={'black'}
+                strokeWidth={2}
+                dot={false}
+                strokeDasharray="4"
+              />,
+            )
+          }
+
+          if (dataLine.displayPrediction) {
+            lines.push(
+              <Line
+                key={`tcn_pred_${dataLine.lineId}`}
+                type="monotone"
+                dataKey={`tcn_pred_${dataLine.lineId}`}
+                stroke={colors[getColorIndex(dataLine.lineId)] || 'black'}
+                strokeWidth={3}
+                dot={false}
+                strokeDasharray="4"
+              />,
+            )
+          }
+
+          return lines
+        })}
       </LineChart>
     </div>
   )

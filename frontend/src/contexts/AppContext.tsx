@@ -12,15 +12,27 @@ const useProviderValue = () => {
 
   const [startDate, setStartDate] = React.useState(new Date('2021-01-01 00:00:00'))
   const [endDate, setEndDate] = React.useState(new Date())
-  const [resolution, setResolution] = React.useState('week')
+  const [resolution, setResolution] = React.useState('day')
 
-  const [activeBrands, setActiveBrands] = React.useState<number[]>([])
-  const [activeCategories, setActiveCategories] = React.useState<number[]>([])
-  const [activeQueries, setActiveQueries] = React.useState<string[]>([])
+  const [activeBrands, setActiveBrands] = React.useState<DataLine[]>([])
+  const [activeCategories, setActiveCategories] = React.useState<DataLine[]>([])
+  const [activeQueries, setActiveQueries] = React.useState<DataLine[]>([])
 
   const [activeType, setactiveType] = React.useState<'query' | 'brand' | 'category'>(
     'query',
   )
+
+  const activeLines = React.useMemo(() => {
+    switch (activeType) {
+      case 'brand':
+        return activeBrands
+      case 'category':
+        return activeCategories
+      case 'query':
+      default:
+        return activeQueries
+    }
+  }, [activeBrands, activeCategories, activeQueries, activeType])
 
   const value = React.useMemo(
     () => ({
@@ -38,6 +50,7 @@ const useProviderValue = () => {
       activeCategories,
       activeQueries,
       activeType,
+      activeLines,
       setData,
       setTopListQueries,
       setTopListBrands,
@@ -68,6 +81,7 @@ const useProviderValue = () => {
       activeCategories,
       activeQueries,
       activeType,
+      activeLines,
       setData,
       setTopListQueries,
       setTopListBrands,

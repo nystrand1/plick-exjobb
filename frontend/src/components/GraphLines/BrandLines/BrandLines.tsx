@@ -5,7 +5,7 @@ import { colors } from '~utils'
 import { GraphLine } from '../GraphLine'
 
 interface BrandLinesProps {
-  onClick: (line: any) => void
+  onClick: (newLine: DataLine) => void
 }
 
 export const BrandLines = ({ onClick }: BrandLinesProps) => {
@@ -14,7 +14,11 @@ export const BrandLines = ({ onClick }: BrandLinesProps) => {
     <>
       {topListBrands?.map((line, i) => {
         const color = colors[i % colors.length]
-        const style = activeBrands.includes(line.brand_id) ? { borderColor: color } : {}
+        const style = activeBrands.find(
+          (activeLine) => activeLine.lineId === line.brand_id,
+        )
+          ? { borderColor: color }
+          : {}
         return (
           <GraphLine
             style={style}

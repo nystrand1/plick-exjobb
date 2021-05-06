@@ -2,7 +2,6 @@ import s from './CustomToolTip.module.scss'
 
 export const CustomTooltip = (props) => {
   const { payload, active, label, tickFormatter } = props
-  console.log(payload)
   if (active) {
     const formattedLabel = label.slice(0, 10)
     return (
@@ -12,8 +11,8 @@ export const CustomTooltip = (props) => {
         </div>
         {payload &&
           payload.length > 0 &&
-          payload.map((p) => (
-            <div className={s.data}>
+          payload.map((p, i) => (
+            <div className={s.data} key={i}>
               <div className={s.name}>
                 {p.name.replace('query_', '').replace('_count', '')}
               </div>

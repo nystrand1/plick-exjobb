@@ -421,12 +421,18 @@ def get_formatted_brand_time_series(db, start_date="2021-01-01", end_date="2021-
                 data['trend_long_{}'.format(brand_id)] = linear_datasets[brand_id]['long'][i]
                 if (i >= res.rowcount - 7):
                     data['trend_short_{}'.format(brand_id)] = linear_datasets[brand_id]['short'][short_index]
-                    data['tcn_pred_{}'.format(brand_id)] = brand_tcn_predictions[brand_id][short_index]['count']
             
             if (i >= res.rowcount - 7):
                 short_index += 1
             res_arr.append(dict(data))
-    #res_arr.reverse()
+
+        for i in range(7):
+            tcn_data = dict()
+            for brand_id in brand_tcn_predictions:
+                tcn_data['tcn_pred_{}'.format(brand_id)] = brand_tcn_predictions[brand_id][i]['count']
+                tcn_data['time_interval'] = brand_tcn_predictions[brand_id][i]['time_interval']
+            res_arr.append(tcn_data)
+    
     return res_arr
 
 def save_to_db(db, data):

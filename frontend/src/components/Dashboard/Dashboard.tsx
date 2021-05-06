@@ -16,15 +16,21 @@ export const Dashboard = () => {
   React.useEffect(() => {
     Api.trendingQueries({ limit: 5 }).then((data) => {
       setTopListQueries(data)
-      setActiveQueries([data[0].query])
+      setActiveQueries([
+        { lineId: data[0].query, displayPrediction: false, displayTrend: false },
+      ])
     })
     Api.trendingBrands({ limit: 5 }).then((data) => {
       setTopListBrands(data)
-      setActiveBrands([data[0].brand_id])
+      setActiveBrands([
+        { lineId: data[0].brand_id, displayPrediction: false, displayTrend: false },
+      ])
     })
     Api.trendingCategories({ limit: 5 }).then((data) => {
       setTopListCategories(data)
-      setActiveCategories([data[0].category_id])
+      setActiveCategories([
+        { lineId: data[0].category_id, displayPrediction: false, displayTrend: false },
+      ])
     })
   }, [
     setTopListQueries,

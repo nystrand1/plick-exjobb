@@ -4,7 +4,7 @@ import { colors } from '~utils'
 import { GraphLine } from '../GraphLine'
 
 interface QueryLinesProps {
-  onClick: (id: any) => void
+  onClick: (newLine: DataLine) => void
 }
 
 export const QueryLines = ({ onClick }: QueryLinesProps) => {
@@ -14,7 +14,9 @@ export const QueryLines = ({ onClick }: QueryLinesProps) => {
     <>
       {topListQueries?.map((line, i) => {
         const color = colors[i % colors.length]
-        const style = activeQueries.includes(line.query) ? { borderColor: color } : {}
+        const style = activeQueries.find((activeLine) => activeLine.lineId === line.query)
+          ? { borderColor: color }
+          : {}
         return (
           <GraphLine
             key={line.query}

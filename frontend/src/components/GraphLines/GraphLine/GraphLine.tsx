@@ -5,7 +5,7 @@ import { ReactComponent as ShowMore } from '~static/svg/add.svg'
 
 interface LineProps {
   title: string
-  onClick: (id: any) => void
+  onClick: (newLine: DataLine, toggle?: boolean) => void
   diff: {
     weekly: number
     monthly: number
@@ -20,13 +20,49 @@ export const GraphLine = ({ title, onClick, diff, style, id, color }: LineProps)
   const [displayTrendLine, setDisplayTrendLine] = React.useState(false)
   const [displayPrediciton, setDisplayPrediciton] = React.useState(false)
 
+  const toggleTrend = (checked: boolean) => {
+    setDisplayTrendLine(checked)
+    onClick(
+      {
+        lineId: id,
+        displayPrediction: displayPrediciton,
+        displayTrend: checked,
+      },
+      false,
+    )
+  }
+
+  const togglePred = (checked: boolean) => {
+    setDisplayPrediciton(checked)
+    onClick(
+      {
+        lineId: id,
+        displayPrediction: checked,
+        displayTrend: displayTrendLine,
+      },
+      false,
+    )
+  }
+
   return (
     <div className={`${s.lineWrapper} ${open ? s.open : ''}`} key={id} style={style}>
       <div className={s.line}>
         <button className={s.button} onClick={() => setOpen(!open)}>
           <ShowMore className={open ? s.open : ''} />
         </button>
-        <div className={s.content} onClick={() => onClick(id)}>
+        <div
+          className={s.content}
+          onClick={() =>
+            onClick(
+              {
+                lineId: id,
+                displayPrediction: displayPrediciton,
+                displayTrend: displayTrendLine,
+              },
+              true,
+            )
+          }
+        >
           <div className={s.title}>{title}</div>
           <div className={s.values}>
             <div>{diff.weekly} st</div>
@@ -38,7 +74,7 @@ export const GraphLine = ({ title, onClick, diff, style, id, color }: LineProps)
         <div>
           <Checkbox
             checked={displayTrendLine}
-            onChange={(ev) => setDisplayTrendLine(ev.target.checked)}
+            onChange={(ev) => toggleTrend(ev.target.checked)}
             style={{ color: color }}
           />
           Visa trendlinje
@@ -46,7 +82,7 @@ export const GraphLine = ({ title, onClick, diff, style, id, color }: LineProps)
         <div className={s.option}>
           <Checkbox
             checked={displayPrediciton}
-            onChange={(ev) => setDisplayPrediciton(ev.target.checked)}
+            onChange={(ev) => togglePred(ev.target.checked)}
             style={{ color: color }}
           />
           Visa prediction
