@@ -370,7 +370,7 @@ def get_formatted_brand_time_series(db, start_date="2021-01-01", end_date="2021-
 
         if(trunc_by == "day"):
             models = db.session.execute("""
-            SELECT model_long, model_short, tcn_prediction
+            SELECT model_long, model_short, tcn_prediction, future_model
             FROM plick.brand_trends
             WHERE brand_id = :brand_id
             """, {
@@ -410,9 +410,11 @@ def get_formatted_brand_time_series(db, start_date="2021-01-01", end_date="2021-
             model = brand_models[brand_id]
             short = generate_linear_series_from_model(7, model[1]) #week
             long = generate_linear_series_from_model(res.rowcount, model[0])
+            future = generate_linear_series_from_model(7, model[3])
             linear_datasets[brand_id] = {
                 'long': long,
                 'short': short,
+                'future': future,
             }
         short_index = 0
         for i, r in enumerate(res):
@@ -431,6 +433,7 @@ def get_formatted_brand_time_series(db, start_date="2021-01-01", end_date="2021-
             for brand_id in brand_tcn_predictions:
                 tcn_data['tcn_pred_{}'.format(brand_id)] = brand_tcn_predictions[brand_id][i]['count']
                 tcn_data['time_interval'] = brand_tcn_predictions[brand_id][i]['time_interval']
+                tcn_data['trend_future_{}'.format(brand_id)] = linear_datasets[brand_id]['future'][i]
             res_arr.append(tcn_data)
     
     return res_arr
