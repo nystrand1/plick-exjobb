@@ -9,45 +9,72 @@ interface TopListProps {
 }
 
 export const TopList = ({ type }: TopListProps) => {
-  const { topListQueries, topListBrands, topListCategories } = useContext()
-  const [time, setTime] = React.useState('1 vecka')
+  const {
+    topListQueries,
+    topListBrands,
+    topListCategories,
+    queriesTime,
+    setQueriesTime,
+    brandsTime,
+    setBrandsTime,
+    categoriesTime,
+    setCategoriesTime,
+  } = useContext()
   const [maxLength, setMaxLength] = React.useState(4)
   let title = ''
+  let time = ''
 
   if (type === 'searchTerms') {
     title = 'Söktermer'
+    time = queriesTime
   }
   if (type === 'brands') {
     title = 'Märken'
+    time = brandsTime
   }
   if (type === 'categories') {
     title = 'Kategorier'
+    time = categoriesTime
   }
 
   const showMore = () => {
     setMaxLength(maxLength + 2)
   }
 
+  const setTime = (time: string) => {
+    if (type === 'searchTerms') {
+      setQueriesTime(time)
+    }
+    if (type === 'brands') {
+      setBrandsTime(time)
+    }
+    if (type === 'categories') {
+      setCategoriesTime(time)
+    }
+  }
+
   const getTimeInterval = () => {
-    const today = new Date('2021-03-15')
+    const today = new Date('2021-04-18')
+    let endDate = today.getDate() + ' ' + months[today.getMonth()]
     let pastDate
     switch (time) {
       case '1 månad':
         pastDate = getPastDate(31, today)
         break
-      case '2 veckor':
-        pastDate = getPastDate(14, today)
+      case 'nästa vecka':
+        pastDate = new Date(today)
+        today.setDate(today.getDate() + 7)
+        endDate = today.getDate() + ' ' + months[today.getMonth()]
         break
       case '1 vecka':
       default:
         pastDate = getPastDate(7, today)
     }
-    const endDate = today.getDate() + ' ' + months[today.getMonth()]
     const startDate = pastDate.getDate() + ' ' + months[pastDate.getMonth()]
     return startDate + ' - ' + endDate
   }
 
-  const options = ['1 vecka', '2 veckor', '1 månad']
+  const options = ['1 vecka', '1 månad', 'nästa vecka']
 
   const getDiff = (entry) => {
     switch (time) {
@@ -55,8 +82,8 @@ export const TopList = ({ type }: TopListProps) => {
         return { diff: entry.monthly_diff, diffPercentage: entry.monthly_diff_percentage }
       case '1 vecka':
         return { diff: entry.weekly_diff, diffPercentage: entry.weekly_diff_percentage }
-      case '1 dag':
-        return null
+      case 'nästa vecka':
+        return { diff: entry.weekly_diff, diffPercentage: entry.weekly_diff_percentage }
     }
   }
 

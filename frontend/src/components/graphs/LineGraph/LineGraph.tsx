@@ -32,6 +32,7 @@ export const LineGraph = ({ width, height }: LineGraphProps) => {
 
   const updateData = React.useCallback(
     (data) => {
+      console.log(data)
       const startIndex = data.findIndex(
         (e) => Number(new Date(e.time_interval)) === Number(startDate),
       )

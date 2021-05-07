@@ -20,7 +20,8 @@ interface ICountRequestData {
 }
 
 interface ITrendingRequestData {
-  limit?: number
+  limit?: number,
+  future?: boolean
 }
 
 interface IExampleAdsRequestData {

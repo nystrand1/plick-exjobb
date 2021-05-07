@@ -12,34 +12,37 @@ export const Dashboard = () => {
     setActiveQueries,
     setActiveBrands,
     setActiveCategories,
+    queriesTime,
+    brandsTime,
+    categoriesTime,
   } = useContext()
+
   React.useEffect(() => {
-    Api.trendingQueries({ limit: 5 }).then((data) => {
+    Api.trendingQueries({ limit: 5, future: queriesTime === 'nästa vecka'}).then((data) => {
       setTopListQueries(data)
       setActiveQueries([
         { lineId: data[0].query, displayPrediction: false, displayTrend: false },
       ])
     })
-    Api.trendingBrands({ limit: 5 }).then((data) => {
+  }, [setTopListQueries, setActiveQueries, queriesTime])
+
+  React.useEffect(() => {
+    Api.trendingBrands({ limit: 5, future: brandsTime === 'nästa vecka' }).then((data) => {
       setTopListBrands(data)
       setActiveBrands([
         { lineId: data[0].brand_id, displayPrediction: false, displayTrend: false },
       ])
     })
-    Api.trendingCategories({ limit: 5 }).then((data) => {
+  }, [setTopListBrands, setActiveBrands, brandsTime])
+
+  React.useEffect(() => {
+    Api.trendingCategories({ limit: 5, future: categoriesTime === 'nästa vecka' }).then((data) => {
       setTopListCategories(data)
       setActiveCategories([
         { lineId: data[0].category_id, displayPrediction: false, displayTrend: false },
       ])
     })
-  }, [
-    setTopListQueries,
-    setTopListBrands,
-    setTopListCategories,
-    setActiveBrands,
-    setActiveQueries,
-    setActiveCategories,
-  ])
+  }, [setTopListCategories, setActiveCategories, categoriesTime])
   return (
     <div className={`${s.dashboardWrapper}`}>
       <div className="row">

@@ -9,6 +9,9 @@ const useProviderValue = () => {
   const [topListQueries, setTopListQueries] = React.useState<ITopListSearchTerm[]>()
   const [topListBrands, setTopListBrands] = React.useState<ITopListBrand[]>()
   const [topListCategories, setTopListCategories] = React.useState<ITopListCategory[]>()
+  const [queriesTime, setQueriesTime] = React.useState('1 vecka')
+  const [brandsTime, setBrandsTime] = React.useState('1 vecka')
+  const [categoriesTime, setCategoriesTime] = React.useState('1 vecka')
 
   const [startDate, setStartDate] = React.useState(new Date('2021-01-01 00:00:00'))
   const [endDate, setEndDate] = React.useState(new Date())
@@ -56,6 +59,9 @@ const useProviderValue = () => {
       activeLines,
       exampleAds,
       modalEntry,
+      queriesTime,
+      categoriesTime,
+      brandsTime,
       setData,
       setTopListQueries,
       setTopListBrands,
@@ -72,6 +78,9 @@ const useProviderValue = () => {
       setactiveType,
       setExampleAds,
       setModalEntry,
+      setQueriesTime,
+      setCategoriesTime,
+      setBrandsTime
     }),
     [
       data,
@@ -91,6 +100,9 @@ const useProviderValue = () => {
       activeLines,
       exampleAds,
       modalEntry,
+      queriesTime,
+      categoriesTime,
+      brandsTime,
       setData,
       setTopListQueries,
       setTopListBrands,
@@ -107,6 +119,9 @@ const useProviderValue = () => {
       setactiveType,
       setExampleAds,
       setModalEntry,
+      setQueriesTime,
+      setCategoriesTime,
+      setBrandsTime
     ],
   )
   return value
