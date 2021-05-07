@@ -1,0 +1,34 @@
+@import '../../styles/all';
+
+.title {
+  text-transform: capitalize;
+}
+
+.closeButton {
+  position: absolute !important;
+  right: 12px;
+  top: 12px;
+  transform: rotateZ(45deg);
+}
+
+.card {
+  width: 350px;
+}
+
+.actionArea {
+  &:hover {
+    text-decoration: none;
+    color: $darkTextHover;
+  }
+}
+
+.media {
+  height: 0;
+  padding-top: 90%;
+}
+
+.loading {
+  object-fit: cover;
+  width: 120px;
+  height: 120px;
+}

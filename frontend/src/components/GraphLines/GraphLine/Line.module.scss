@@ -23,6 +23,7 @@
 
 .content {
   padding: $mediumMargin;
+  padding-left: 0;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -48,13 +49,7 @@
 }
 
 .button {
-  background-color: transparent;
-  border: none;
-  padding: $mediumMargin;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-
+  width: 48px;
   svg {
     transition: transform 0.2s ease;
 

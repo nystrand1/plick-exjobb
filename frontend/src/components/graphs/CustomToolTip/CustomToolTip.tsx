@@ -3,7 +3,7 @@ import s from './CustomToolTip.module.scss'
 export const CustomTooltip = (props) => {
   const { payload, active, label, tickFormatter } = props
   if (active) {
-    const formattedLabel = label.slice(0, 10)
+    const formattedLabel = label?.slice(0, 10)
     return (
       <div className={s.tooltipWrapper}>
         <div className={s.date}>
@@ -14,10 +14,14 @@ export const CustomTooltip = (props) => {
           payload.map((p, i) => (
             <div className={s.data} key={i}>
               <div className={s.name}>
-                {p.name.replace('query_', '').replace('_count', '')}
+                {p?.name
+                  .replace('query_', '')
+                  .replace('_count', '')
+                  .replace('_long_', ' long ')
+                  .replace('_short_', ' kort ')}
               </div>
               <div className={s.value}>
-                <div className={s.val}>{p.value}</div> sökningar
+                <div className={s.val}>{Math.round(p.value)}</div> sökningar
               </div>
             </div>
           ))}

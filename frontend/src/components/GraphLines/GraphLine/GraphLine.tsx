@@ -1,6 +1,6 @@
 import * as React from 'react'
 import s from './Line.module.scss'
-import { Checkbox } from '@material-ui/core'
+import { Checkbox, IconButton } from '@material-ui/core'
 import { ReactComponent as ShowMore } from '~static/svg/add.svg'
 
 interface LineProps {
@@ -47,9 +47,9 @@ export const GraphLine = ({ title, onClick, diff, style, id, color }: LineProps)
   return (
     <div className={`${s.lineWrapper} ${open ? s.open : ''}`} key={id} style={style}>
       <div className={s.line}>
-        <button className={s.button} onClick={() => setOpen(!open)}>
+        <IconButton className={s.button} onClick={() => setOpen(!open)}>
           <ShowMore className={open ? s.open : ''} />
-        </button>
+        </IconButton>
         <div
           className={s.content}
           onClick={() =>
@@ -77,7 +77,7 @@ export const GraphLine = ({ title, onClick, diff, style, id, color }: LineProps)
             onChange={(ev) => toggleTrend(ev.target.checked)}
             style={{ color: color }}
           />
-          Visa trendlinje
+          Visa trendlinjer
         </div>
         <div className={s.option}>
           <Checkbox

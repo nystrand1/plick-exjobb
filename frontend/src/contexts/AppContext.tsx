@@ -22,6 +22,9 @@ const useProviderValue = () => {
     'query',
   )
 
+  const [modalEntry, setModalEntry] = React.useState<string | null>(null)
+  const [exampleAds, setExampleAds] = React.useState<any[]>([])
+
   const activeLines = React.useMemo(() => {
     switch (activeType) {
       case 'brand':
@@ -51,6 +54,8 @@ const useProviderValue = () => {
       activeQueries,
       activeType,
       activeLines,
+      exampleAds,
+      modalEntry,
       setData,
       setTopListQueries,
       setTopListBrands,
@@ -65,6 +70,8 @@ const useProviderValue = () => {
       setActiveCategories,
       setActiveQueries,
       setactiveType,
+      setExampleAds,
+      setModalEntry,
     }),
     [
       data,
@@ -82,6 +89,8 @@ const useProviderValue = () => {
       activeQueries,
       activeType,
       activeLines,
+      exampleAds,
+      modalEntry,
       setData,
       setTopListQueries,
       setTopListBrands,
@@ -96,6 +105,8 @@ const useProviderValue = () => {
       setActiveCategories,
       setActiveQueries,
       setactiveType,
+      setExampleAds,
+      setModalEntry,
     ],
   )
   return value

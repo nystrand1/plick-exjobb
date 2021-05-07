@@ -2,6 +2,7 @@ import * as React from 'react'
 import s from './TopListEntry.module.scss'
 import { Api } from '~services'
 import Loading from '~static/images/loading.gif'
+import { useContext } from '~contexts'
 
 interface TopListEntryProps {
   query: string
@@ -19,16 +20,23 @@ export const TopListEntry = ({
   index,
   words,
 }: TopListEntryProps) => {
+  const { exampleAds, setModalEntry } = useContext()
   const [image, setImage] = React.useState()
   React.useEffect(() => {
-    Api.exampleAds({ query: query.toLowerCase(), limit: 1 }).then((data) => {
-      const ads = data.blocks[0].data.ads
+    const entryQuery = query.toLowerCase()
+    Api.exampleAds({ query: entryQuery, limit: 2 }).then((data) => {
+      const ads = data.blocks.map((block) => block.data.ads).flat(1)
+
+      if (!exampleAds.find((ad) => ad.key === entryQuery)) {
+        exampleAds.push({ key: entryQuery, ads })
+      }
+
       setImage(ads[Math.floor(Math.random() * ads.length)].ad_photos[0].photo)
     })
-  }, [query])
+  }, [query, exampleAds])
 
   return (
-    <button className={s.entryWrapper} onClick={() => console.log('display entry info')}>
+    <button className={s.entryWrapper} onClick={() => setModalEntry(query.toLowerCase())}>
       <div className={s.text}>
         <h3 className={s.index}>{index}</h3>
         <div className={s.queryWrapper}>

@@ -8,13 +8,11 @@ import { App } from '~components'
 import { Provider } from '~contexts'
 
 const Root = (
-  <React.StrictMode>
-    <Provider>
-      <Router>
-        <App />
-      </Router>
-    </Provider>
-  </React.StrictMode>
+  <Provider>
+    <Router>
+      <App />
+    </Router>
+  </Provider>
 )
 
 ReactDOM.render(Root, document.getElementById('root'))
