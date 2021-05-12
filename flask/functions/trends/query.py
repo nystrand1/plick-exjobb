@@ -35,7 +35,7 @@ def get_query_candidates(db, seperate_query_categories = False):
         AND
         created_at > '2021-04-18'::date - interval '7 day'
         GROUP BY query_processed
-        HAVING count(query_processed) > 300
+        HAVING count(query_processed) > 1000
         ORDER BY amount DESC
         LIMIT 50
         """)
