@@ -33,7 +33,6 @@ from .functions.regression.sarima import *
 from .functions.regression.lstm import *
 from .functions.regression.tcn import *
 from .functions.utils.dataset import *
-from .functions.process_queries import *
 from .functions.utils.plick import *
 
 
@@ -45,14 +44,17 @@ db = sa(app)
 CORS(app, resources={r"/*": {"origins": "*"}})
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
+
 @app.route('/get-brand-timeseries', methods=['POST'])
 @cross_origin()
 def get_brand_timeseries():
     data = request.json
     brand_ids = data['brand_ids']
     trunc_by = data['resolution']
-    res = get_formatted_brand_time_series(db, brand_ids=brand_ids, trunc_by=trunc_by)
+    res = get_formatted_brand_time_series(
+        db, brand_ids=brand_ids, trunc_by=trunc_by)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/get-query-timeseries', methods=['POST'])
 @cross_origin()
@@ -60,8 +62,10 @@ def get_query_timeseries():
     data = request.json
     query_ids = data['query_ids']
     trunc_by = data['resolution']
-    res = get_formatted_query_time_series(db, query_ids=query_ids, trunc_by=trunc_by)
+    res = get_formatted_query_time_series(
+        db, query_ids=query_ids, trunc_by=trunc_by)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/get-category-timeseries', methods=['POST'])
 @cross_origin()
@@ -69,8 +73,10 @@ def get_category_timeseries():
     data = request.json
     category_ids = data['category_ids']
     trunc_by = data['resolution']
-    res = get_formatted_category_time_series(db, category_ids=category_ids, trunc_by=trunc_by)
+    res = get_formatted_category_time_series(
+        db, category_ids=category_ids, trunc_by=trunc_by)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/query-candidates', methods=['GET'])
 @cross_origin()
@@ -78,17 +84,20 @@ def query_candidates():
     res = generate_query_datasets(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+
 @app.route('/category-candidates', methods=['GET'])
 @cross_origin()
 def category_candidates():
     res = generate_category_datasets(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+
 @app.route('/brand-candidates', methods=['GET'])
 @cross_origin()
 def brand_candidates():
     res = generate_brand_datasets(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/generate-trend-data', methods=['GET'])
 @cross_origin()
@@ -101,6 +110,7 @@ def generate_trend_data():
     res = generate_brand_datasets(db)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+
 @app.route('/generate-tcn-models', methods=['GET'])
 @cross_origin()
 def generate_tcn_models():
@@ -111,6 +121,7 @@ def generate_tcn_models():
     logging.debug("GENERATING BRAND TCN MODELS")
     generate_brand_tcn_models(db, regenerate=False)
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/generate-lstm-models', methods=['GET'])
 @cross_origin()
@@ -123,6 +134,7 @@ def generate_lstm_models():
     generate_brand_lstm_models(db, regenerate=False)
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
+
 @app.route('/generate-sarima-models', methods=['GET'])
 @cross_origin()
 def generate_sarima_models():
@@ -134,6 +146,7 @@ def generate_sarima_models():
     generate_brand_sarima_models(db, regenerate=False)
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
 
+
 @app.route('/generate-models', methods=['GET'])
 @cross_origin()
 def generate_models():
@@ -141,6 +154,7 @@ def generate_models():
     generate_lstm_models()
     generate_sarima_models()
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/trending-words', methods=['POST'])
 @cross_origin()
@@ -151,12 +165,13 @@ def trending_words():
         future = data['future']
     else:
         future = False
-    
+
     if future:
         res = get_future_trending_words(db, limit)
     else:
         res = get_trending_words(db, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/trending-categories', methods=['POST'])
 @cross_origin()
@@ -167,12 +182,13 @@ def trending_categories():
         future = data['future']
     else:
         future = False
-    
+
     if future:
         res = get_future_trending_categories(db, limit)
     else:
         res = get_trending_categories(db, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/trending-brands', methods=['POST'])
 @cross_origin()
@@ -183,13 +199,14 @@ def trending_brands():
         future = data['future']
     else:
         future = False
-    
+
     if future:
         res = get_future_trending_brands(db, limit)
     else:
         res = get_trending_brands(db)
-        
+
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/example-ads', methods=['POST'])
 @cross_origin()
@@ -200,12 +217,14 @@ def get_example_ads():
     res = get_ads(query, limit)
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+
 @app.route('/query-dataset', methods=['POST'])
 @cross_origin()
 def query_dataset():
     data = request.json
     res = get_query_dataset(db, data['query'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/brand-dataset', methods=['POST'])
 @cross_origin()
@@ -214,13 +233,15 @@ def brand_dataset():
     res = get_brand_dataset(db, data['brand'])
     return Response(json.dumps(res), status=HTTPStatus.OK, content_type="application/json")
 
+
 @app.route('/eval-sarima', methods=['GET'])
 @cross_origin()
 def eval_sarima():
     brands = get_all_brand_datasets(db)
     categories = get_all_category_datasets(db)
     queries = get_all_query_datasets(db)
-    scores = eval_all_sarima_models(db, categories, brands, queries, regenerate=True)
+    scores = eval_all_sarima_models(
+        db, categories, brands, queries, regenerate=True)
     return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
 
 
@@ -230,9 +251,10 @@ def eval_lstm():
     brands = get_all_brand_datasets(db)
     categories = get_all_category_datasets(db)
     queries = get_all_query_datasets(db)
-    
-    scores = eval_all_lstm_models(db, categories, brands, queries, regenerate=True)
-    
+
+    scores = eval_all_lstm_models(
+        db, categories, brands, queries, regenerate=True)
+
     return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
 
 
@@ -242,10 +264,12 @@ def eval_tcn():
     brands = get_all_brand_datasets(db)
     categories = get_all_category_datasets(db)
     queries = get_all_query_datasets(db)
-    
-    scores = eval_all_tcn_models(db, categories, brands, queries, regenerate=True)
-    
+
+    scores = eval_all_tcn_models(
+        db, categories, brands, queries, regenerate=True)
+
     return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/darts-test', methods=['GET'])
 @cross_origin()
@@ -257,11 +281,13 @@ def darts_test():
     test.to_csv('./functions/regression/jeans_day.csv')
     return Response(json.dumps(dataset), status=HTTPStatus.OK, content_type="application/json")
 
+
 @app.route('/eval-brands', methods=['GET'])
 @cross_origin()
 def eval_brands():
     scores = get_brand_model_scores(db)
     return Response(json.dumps(scores), status=HTTPStatus.OK, content_type="application/json")
+
 
 @app.route('/graphs', methods=['GET'])
 @cross_origin()
@@ -310,6 +336,7 @@ def get_graphs():
 
     return "success"
 
+
 @app.route('/graphs-prediction', methods=['GET'])
 @cross_origin()
 def get_future_graphs():
@@ -357,6 +384,7 @@ def get_future_graphs():
 
     return "success"
 
+
 @app.route('/future', methods=['GET'])
 @cross_origin()
 def future():
@@ -372,7 +400,8 @@ def future():
     for category in categories:
         dataset = category['tcn_prediction']
         future_model = get_linear_model(dataset)
-        save_future_model(db, future_model, "category", category['category_id'])
+        save_future_model(db, future_model, "category",
+                          category['category_id'])
 
     for query in queries:
         dataset = query['tcn_prediction']
@@ -380,3 +409,34 @@ def future():
         save_future_model(db, future_model, "query", query['query'])
 
     return Response(json.dumps("success"), status=HTTPStatus.OK, content_type="application/json")
+
+
+@app.route('/count', methods=['GET'])
+@cross_origin()
+def count():
+    brand_cands = get_brand_candidates(db)
+    query_cands = get_query_candidates(db)
+    category_cands = get_category_candidates(db)
+    logging.debug(category_cands)
+    category_ids = [cat['id'] for cat in category_cands]
+    query_ids = [query['query_processed'] for query in query_cands]
+    brand_ids = [brand['id'] for brand in brand_cands]
+    res = db.session.execute("""
+        SELECT count(DISTINCT record.id) as count
+        FROM plick.search_record_processed as record
+        WHERE category_ids && :category_ids
+        OR brand_ids && :brand_ids
+        OR query_processed = ANY( :query_ids )
+    """, {
+        'category_ids': category_ids,
+        'brand_ids': brand_ids,
+        'query_ids': query_ids
+    })
+
+    logging.debug(res)
+
+    res_arr = []
+    for r in res:
+        res_arr.append(dict(r))
+
+    return Response(json.dumps(res_arr), status=HTTPStatus.OK, content_type="application/json")

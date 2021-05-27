@@ -99,7 +99,7 @@ def get_future_trending_words(db, limit=5, k_threshold=0.5):
     (plick.future_weekly_count_diff(time_series_day, tcn_prediction))[2] as weekly_diff,
     (plick.future_weekly_count_diff(time_series_day, tcn_prediction))[3] * 100 - 100 as weekly_diff_percentage
     FROM plick.query_trends
-    WHERE future_model[1] + :threshold > model_long[1]
+    WHERE future_model[1] > model_long[1] + :threshold
     AND future_model[1] > 1
     ORDER BY future_model[1] DESC
     LIMIT :limit
@@ -131,7 +131,7 @@ def get_trending_words(db, limit=5, k_threshold=0):
     (plick.monthly_count_diff(time_series_day))[1] - (plick.monthly_count_diff(time_series_day))[2] as monthly_diff,
     (plick.monthly_count_diff(time_series_day))[3] * 100 - 100 as monthly_diff_percentage
     FROM plick.query_trends
-    WHERE model_short[1] + :threshold > model_long[1]
+    WHERE model_short[1] > model_long[1] + :threshold
     AND model_short[1] > 1
     ORDER BY model_short[1] DESC
     LIMIT :limit
