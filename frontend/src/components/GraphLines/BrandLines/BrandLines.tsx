@@ -1,5 +1,3 @@
-import * as React from 'react'
-import s from '../GraphLines.module.scss'
 import { useContext } from '~contexts'
 import { colors } from '~utils'
 import { GraphLine } from '../GraphLine'

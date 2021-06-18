@@ -3,23 +3,42 @@ import s from './CustomToolTip.module.scss'
 
 export const CustomTooltip = (props) => {
   const { payload, active, label, tickFormatter } = props
-  const { topListBrands, topListCategories, activeType } = useContext();
-
+  const { topListBrands, topListCategories, activeType } = useContext()
 
   const getTopicName = (payload) => {
     switch (activeType) {
       case 'brand':
-        const brandId = parseInt(payload.name.replace('brand_', '').replace('_count', ''))
-        return topListBrands?.find((element) => element.brand_id === brandId)?.brand_name
+        const brandId = parseInt(
+          payload.name
+            .replace('brand_', '')
+            .replace('_count', '')
+            .replace('tcn_pred_', ''),
+        )
+        const brandPrefix = /tcn_pred/.test(payload.name) ? 'Prediction ' : ''
+        return (
+          brandPrefix +
+          topListBrands?.find((element) => element.brand_id === brandId)?.brand_name
+        )
       case 'category':
-        const categoryId = parseInt(payload.name.replace('category_', '').replace('_count', ''))
-        return topListCategories?.find((element) => element.category_id === categoryId)?.category_name
+        const categoryId = parseInt(
+          payload.name
+            .replace('category_', '')
+            .replace('_count', '')
+            .replace('tcn_pred_', ''),
+        )
+        const categoryPrefix = /tcn_pred/.test(payload.name) ? 'Prediction ' : ''
+        return (
+          categoryPrefix +
+          topListCategories?.find((element) => element.category_id === categoryId)
+            ?.category_name
+        )
       case 'query':
         return payload.name
-        .replace('query_', '')
-        .replace('_count', '')
-        .replace('_long_', ' long ')
-        .replace('_short_', ' kort ')
+          .replace('query_', '')
+          .replace('_count', '')
+          .replace('_long_', ' long ')
+          .replace('_short_', ' kort ')
+          .replace('tcn_pred_', 'Prediction ')
       default:
         return 0
     }
@@ -36,15 +55,14 @@ export const CustomTooltip = (props) => {
           payload.length > 0 &&
           payload.map((p, i) => {
             return (
-            <div className={s.data} key={i}>
-              <div className={s.name}>
-                {getTopicName(p)}
+              <div className={s.data} key={i}>
+                <div className={s.name}>{getTopicName(p)}</div>
+                <div className={s.value}>
+                  <div className={s.val}>{Math.round(p.value)}</div> sökningar
+                </div>
               </div>
-              <div className={s.value}>
-                <div className={s.val}>{Math.round(p.value)}</div> sökningar
-              </div>
-            </div>
-          )})}
+            )
+          })}
       </div>
     )
   }
